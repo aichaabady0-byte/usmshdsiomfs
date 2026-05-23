@@ -1,152 +1,93 @@
 const { Client, GatewayIntentBits, ChannelType } = require('discord.js');
 const admin = require('firebase-admin');
 
-// 1. INITIALISATION SÉCURISÉE DE FIREBASE EN MODE SERVERLESS
+// 1. INITIALISATION FIREBASE
 try {
     if (!admin.apps.length) {
         if (!process.env.FIREBASE_DATABASE_URL) {
-            throw new Error("La variable d'environnement FIREBASE_DATABASE_URL est manquante !");
+            throw new Error("Variable FIREBASE_DATABASE_URL manquante.");
         }
         admin.initializeApp({
             databaseURL: process.env.FIREBASE_DATABASE_URL
         });
     }
 } catch (firebaseError) {
-    console.error("Firebase Initialization Crash:", firebaseError);
+    console.error("Firebase Init Error:", firebaseError);
 }
 
-// 2. CONFIGURATION DU BOT DISCORD
-const client = new Client({
-    intents: [
-        GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildMembers,
-        GatewayIntentBits.GuildPresences,
-        GatewayIntentBits.GuildMessages
-    ]
-});
-
-let isReady = false;
-let connectingPromise = null;
-
-function connectDiscord() {
-    if (isReady) return Promise.resolve();
-    if (connectingPromise) return connectingPromise;
-
-    connectingPromise = client.login(process.env.DISCORD_TOKEN)
-        .then(() => {
-            return new Promise((resolve) => {
-                if (client.readyAt) {
-                    isReady = true;
-                    resolve();
-                } else {
-                    client.once('ready', () => {
-                        isReady = true;
-                        resolve();
-                    });
-                }
-            });
-        })
-        .catch(err => {
-            connectingPromise = null;
-            console.error("Discord Login failed:", err);
-            throw err;
-        });
-
-    return connectingPromise;
-}
-
-// Déclenchement de la connexion au chargement du fichier
-connectDiscord();
-
-// 3. HANDLER PRINCIPAL DE L'API VERCEL
 module.exports = async (req, res) => {
-    // Si l'initialisation Firebase a échoué en amont
+    // Vérification de sécurité Firebase
     if (!admin.apps.length) {
-        return res.status(500).json({ 
-            error: "Firebase config error", 
-            details: "FIREBASE_DATABASE_URL n'est pas configuré ou est invalide sur Vercel." 
-        });
+        return res.status(500).json({ error: "Firebase non initialisé." });
     }
 
-    // EN SERVERLESS : On attend activement que le bot soit connecté avant de continuer
+    // 2. INSTANCIATION DU CLIENT DISCORD UNIQUE POUR CETTE REQUÊTE
+    const client = new Client({
+        intents: [
+            GatewayIntentBits.Guilds,
+            GatewayIntentBits.GuildMembers,
+            GatewayIntentBits.GuildPresences,
+            GatewayIntentBits.GuildMessages
+        ]
+    });
+
     try {
-        await connectDiscord();
-    } catch (authError) {
-        return res.status(500).json({ error: "Discord authentication failed", details: authError.message });
-    }
-
-    const guild = client.guilds.cache.get(process.env.GUILD_ID);
-    if (!guild) {
-        return res.status(404).json({ 
-            error: "Guild Discord introuvable", 
-            details: "Le GUILD_ID fourni ne correspond à aucun serveur accessible par le bot." 
+        // Promisification de la connexion rapide
+        await new Promise((resolve, reject) => {
+            client.login(process.env.DISCORD_TOKEN).catch(reject);
+            client.once('ready', resolve);
+            // Sécurité : Si au bout de 6 secondes Discord ne répond pas, on lâche l'affaire
+            setTimeout(() => reject(new Error("Discord timeout")), 6000);
         });
-    }
 
-    const db = admin.database();
+        const guild = client.guilds.cache.get(process.env.GUILD_ID);
+        if (!guild) {
+            client.destroy();
+            return res.status(404).json({ error: "Serveur Discord introuvable." });
+        }
 
-    // ==========================================
-    // TRAITEMENT DES ACTIONS (METHODE POST)
-    // ==========================================
-    if (req.method === 'POST') {
-        const { action, channelId, content, username, userId } = req.body;
+        const db = admin.database();
 
-        try {
+        // ==========================================
+        // TRAITEMENT MÉTHODE POST (ENVOI DE MESSAGE)
+        // ==========================================
+        if (req.method === 'POST') {
+            const { action, channelId, content, username, userId } = req.body;
+
             if (action === 'sendMessage') {
-                if (!channelId || !content || !username) {
-                    return res.status(400).json({ error: "Missing parameters for sendMessage." });
-                }
-
                 const channel = await client.channels.fetch(channelId);
-                if (!channel || channel.type !== ChannelType.GuildText) {
-                    return res.status(400).json({ error: "Target channel is not a text channel." });
+                if (channel && channel.type === ChannelType.GuildText) {
+                    await channel.send(`[WEB USER] ${username}: ${content}`);
                 }
-                await channel.send(`[WEB USER] ${username}: ${content}`);
 
-                const msgRef = db.ref(`messages/${channelId}`).push();
-                const badges = username.toLowerCase() === "fufu" ? ["Admin"] : [];
-
-                await msgRef.set({
+                await db.ref(`messages/${channelId}`).push().set({
                     author: username,
                     text: content,
                     timestamp: Date.now(),
-                    badges: badges
+                    badges: username.toLowerCase() === "fufu" ? ["Admin"] : []
                 });
 
+                client.destroy(); // Toujours éteindre le client après usage
                 return res.status(200).json({ success: true });
             }
 
-            if (action === 'kick') {
-                if (!userId) return res.status(400).json({ error: "Missing userId." });
-                const member = await guild.members.fetch(userId);
-                await member.kick("Expulsé via l'interface d'administration USMS");
+            // Actions de modération rapides
+            const member = userId ? await guild.members.fetch(userId).catch(() => null) : null;
+            if (member) {
+                if (action === 'kick') await member.kick("Via USMS Web");
+                if (action === 'ban') await guild.members.ban(userId, { reason: "Via USMS Web" });
+                if (action === 'timeout') await member.timeout(10 * 60 * 1000, "Via USMS Web");
+                client.destroy();
                 return res.status(200).json({ success: true });
             }
-
-            if (action === 'ban') {
-                if (!userId) return res.status(400).json({ error: "Missing userId." });
-                await guild.members.ban(userId, { reason: "Banni via l'interface d'administration USMS" });
-                return res.status(200).json({ success: true });
-            }
-
-            if (action === 'timeout') {
-                if (!userId) return res.status(400).json({ error: "Missing userId." });
-                const member = await guild.members.fetch(userId);
-                await member.timeout(10 * 60 * 1000, "Mute 10 minutes via l'interface USMS");
-                return res.status(200).json({ success: true });
-            }
-
-            return res.status(400).json({ error: "Unknown action." });
-
-        } catch (err) {
-            return res.status(500).json({ error: "Action execution failed", details: err.message });
+            
+            client.destroy();
+            return res.status(400).json({ error: "Action inconnue ou membre introuvable." });
         }
-    }
 
-    // ==========================================
-    // LECTURE DES DONNÉES DU SERVEUR (METHODE GET)
-    // ==========================================
-    try {
+        // ==========================================
+        // TRAITEMENT MÉTHODE GET (CHARGEMENT DU SITE)
+        // ==========================================
         const membersList = await guild.members.fetch({ withPresences: true });
         const channelsList = await guild.channels.fetch();
 
@@ -160,28 +101,20 @@ module.exports = async (req, res) => {
                 position: c.position
             }));
 
-        const dataMembers = membersList.map(m => {
-            let status = 'offline';
-            if (m.presence && m.presence.status) status = m.presence.status;
+        const dataMembers = membersList.map(m => ({
+            id: m.id,
+            username: m.user.username,
+            nickname: m.displayName || m.user.username,
+            avatar: m.user.displayAvatarURL({ extension: 'png', size: 128 }),
+            status: m.presence?.status || 'offline',
+            roles: m.roles.cache
+                .filter(r => r.name !== '@everyone')
+                .map(r => ({ name: r.name, color: r.hexColor }))
+        }));
 
-            return {
-                id: m.id,
-                username: m.user.username,
-                nickname: m.displayName || m.user.username,
-                avatar: m.user.displayAvatarURL({ extension: 'png', size: 128 }),
-                status: status,
-                roles: m.roles.cache
-                    .filter(r => r.name !== '@everyone')
-                    .map(r => ({ name: r.name, color: r.hexColor }))
-            };
-        });
-
-        return res.status(200).json({
-            guildInfo: {
-                name: guild.name,
-                id: guild.id,
-                rolesCount: guild.roles.cache.size
-            },
+        // Envoi des données + config au front-end
+        res.status(200).json({
+            guildInfo: { name: guild.name, id: guild.id, rolesCount: guild.roles.cache.size },
             channels: dataChannels,
             members: dataMembers,
             firebaseConfig: {
@@ -195,7 +128,11 @@ module.exports = async (req, res) => {
             }
         });
 
-    } catch (error) {
-        return res.status(500).json({ error: "Failed to fetch Discord Guild data", details: error.message });
+    } catch (err) {
+        console.error("Crash général de la fonction :", err);
+        res.status(500).json({ error: "Erreur interne du serveur", details: err.message });
+    } finally {
+        // Sécurité absolue pour éviter les fuites de mémoire sur Vercel
+        if (client) client.destroy();
     }
 };
