@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Variables globales pour stocker les données reçues
     let allMembers = [];
-    let currentLang = 'fr';
+    let currentLang = 'en'; // <--- Modifié ici pour démarrer en anglais !
 
     // Traductions de l'interface
     const translations = {
