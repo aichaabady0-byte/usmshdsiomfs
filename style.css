@@ -1,145 +1,219 @@
+/* Style Général 2005/2008 */
 body {
     font-family: Arial, sans-serif;
-    background-color: #FFFFFF;
-    color: #333;
+    background-color: #F3F3F3;
+    color: #333333;
     margin: 0;
+    padding: 15px;
+}
+
+#masthead {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #CCCCCC;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+    background-color: #FFFFFF;
     padding: 10px;
 }
 
-/* Header */
-#yt-header {
+.logo-container {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    border-bottom: 2px solid #CCC;
-    padding-bottom: 10px;
-    margin-bottom: 20px;
+    flex-direction: column;
+    align-items: center;
 }
 
-.logo-yt {
-    font-size: 28px;
+.logo {
+    font-size: 32px;
     font-weight: bold;
-    letter-spacing: -1px;
+    color: #333333;
+    font-family: 'Arial Black', sans-serif;
+    text-align: center;
+    line-height: 0.9;
 }
 
-.box-red {
-    background-color: #E62117;
+/* L'EFFET DE LUMIÈRE GLOSSY STYLE IMAGE_DCD16C.PNG */
+.logo .blue-box {
+    display: block; 
+    margin-top: 5px;
     color: white;
-    padding: 2px 6px;
-    border-radius: 4px;
-    margin-left: 2px;
+    padding: 6px 24px;
+    border-radius: 18px; 
+    font-size: 36px;
+    position: relative;
+    background-color: #0099e5; 
+    
+    /* Dégradé de reflet blanc supérieur */
+    background-image: linear-gradient(
+        to bottom, 
+        rgba(255, 255, 255, 0.6) 0%, 
+        rgba(255, 255, 255, 0.2) 45%, 
+        rgba(255, 255, 255, 0) 50%
+    );
+    box-shadow: inset 0 1px 3px rgba(255,255,255,0.8), 0 2px 4px rgba(0,0,0,0.15);
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
 }
 
-.slogan {
+.tagline {
     font-size: 11px;
     color: #666;
-    display: block;
-    margin-top: 2px;
+    font-style: italic;
+    margin-top: 5px;
 }
 
-.main-nav a {
-    text-decoration: none;
-    color: #0033CC;
+.search-bar input {
+    padding: 5px;
+    font-size: 14px;
+    width: 250px;
+    border: 1px solid #999999;
+}
+
+.yt-button {
+    background: linear-gradient(#FFFFFF, #EAEAEA);
+    border: 1px solid #CCCCCC;
+    border-bottom-color: #B5B5B5;
+    padding: 5px 12px;
+    font-size: 13px;
+    cursor: pointer;
     font-weight: bold;
-    padding: 5px 10px;
-    margin-left: 5px;
-    border: 1px solid transparent;
 }
 
-.main-nav a.active {
-    background-color: #EEE;
-    border: 1px solid #CCC;
-    border-bottom: 1px solid #EEE;
-}
-
-/* Layout */
 .container {
     display: flex;
     gap: 20px;
 }
 
-.main-content {
-    flex: 3;
-}
-
 .sidebar {
-    flex: 1;
-    background-color: #F2F2F2;
-    border: 1px solid #EAEAEA;
-    padding: 15px;
-    min-height: 400px;
+    width: 30%;
+    min-width: 260px;
 }
 
-.section-title {
-    font-size: 14px;
-    font-weight: bold;
+.main-content {
+    width: 70%;
+}
+
+.box-header {
     background-color: #EAEAEA;
-    padding: 5px;
-    border: 1px solid #D3D3D3;
-    margin-bottom: 15px;
+    border: 1px solid #CCCCCC;
+    padding: 6px 10px;
+    font-weight: bold;
+    font-size: 14px;
 }
 
-/* Grille style anciennes vignettes */
-.grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-    gap: 15px;
+.user-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border: 1px solid #CCCCCC;
+    border-top: none;
+    background-color: #FFFFFF;
+    max-height: 500px;
+    overflow-y: auto;
 }
 
-.member-card {
+.user-item {
+    padding: 10px;
+    border-bottom: 1px dotted #CCCCCC;
     cursor: pointer;
-    text-align: center;
-}
-
-.thumb-box {
-    width: 120px;
-    height: 90px;
-    background-color: #000;
-    margin: 0 auto 5px;
-    border: 1px solid #CCC;
     display: flex;
     align-items: center;
-    justify-content: center;
-    overflow: hidden;
+    gap: 10px;
 }
 
-.thumb-box img {
-    max-height: 100%;
-    max-width: 100%;
+.user-item:hover {
+    background-color: #BAE3FF;
 }
 
-.member-name {
-    font-size: 12px;
+.user-item.active {
+    background-color: #FFE082;
+}
+
+.mini-avatar {
+    width: 32px;
+    height: 32px;
+    border: 1px solid #999;
+}
+
+.user-info .nickname {
     font-weight: bold;
     color: #0033CC;
-    word-wrap: break-word;
+    text-decoration: none;
 }
 
-.member-roles {
+.user-item:hover .nickname {
+    text-decoration: underline;
+}
+
+.user-info .role-tag {
     font-size: 11px;
     color: #666;
+    display: block;
 }
 
-/* Détails */
-.detail-avatar {
+.profile-box {
+    border: 1px solid #CCCCCC;
+    border-top: none;
+    padding: 20px;
+    background-color: #FFFFFF;
+    min-height: 300px;
+}
+
+.no-selection {
+    color: #666;
+    font-style: italic;
+    text-align: center;
+    margin-top: 50px;
+}
+
+.profile-header {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+    border-bottom: 1px dashed #CCC;
+    padding-bottom: 15px;
+}
+
+.big-avatar {
     width: 80px;
     height: 80px;
-    border: 1px solid #CCC;
-    display: block;
+    border: 1px solid #666;
+}
+
+.profile-title h2 {
+    margin: 0 0 5px 0;
+    color: #0033CC;
+}
+
+.discord-tag {
+    color: #666;
+    font-size: 13px;
+}
+
+.info-row {
     margin-bottom: 10px;
+    font-size: 14px;
 }
 
-.info-group {
-    font-size: 12px;
-    margin-bottom: 8px;
-}
-
-.info-group strong {
+.info-label {
+    font-weight: bold;
     color: #555;
+    width: 140px;
+    display: inline-block;
 }
 
-.placeholder-text {
-    font-size: 12px;
-    color: #999;
-    text-align: center;
+.roles-container {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    margin-top: 5px;
+}
+
+.discord-role {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    color: white;
+    font-weight: bold;
+    border: 1px solid rgba(0,0,0,0.2);
 }
