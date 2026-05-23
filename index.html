@@ -3,38 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube - Broadcast Yourself (Discord Edition)</title>
+    <title>DiscordTube - Broadcast Your Members</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <header id="yt-header">
-        <div class="logo-area">
-            <span class="logo-yt">Your<span class="box-red">Discord</span></span>
-            <span class="slogan">Broadcast Your Members</span>
+    <!-- Header YouTube 2005 -->
+    <header id="masthead">
+        <div class="logo-container">
+            <h1 class="logo">Discord<span class="red-box">Tube</span></h1>
+            <span class="tagline">Broadcast Yourself™</span>
         </div>
-        <nav class="main-nav">
-            <a href="#" class="active">Accueil</a>
-            <a href="#">Vidéos (Membres)</a>
-            <a href="#">Chaînes</a>
-        </nav>
+        <div class="search-bar">
+            <input type="text" placeholder="Rechercher un membre..." disabled>
+            <button class="yt-button">Rechercher</button>
+        </div>
     </header>
 
+    <!-- Conteneur Principal -->
     <div class="container">
-        <main class="main-content">
-            <div class="section-title">Membres du serveur</div>
-            <div id="members-grid" class="grid">
-                </div>
-        </main>
-
-        <aside class="sidebar" id="detail-sidebar">
-            <div class="section-title">Informations détaillées</div>
-            <div id="detail-content">
-                <p class="placeholder-text">Cliquez sur un membre pour voir son profil.</p>
-            </div>
+        
+        <!-- Colonne Gauche : Liste des utilisateurs -->
+        <aside class="sidebar">
+            <div class="box-header">Membres du Serveur</div>
+            <ul id="users-list" class="user-list">
+                <!-- Injecté par JavaScript -->
+            </ul>
         </aside>
+
+        <!-- Colonne Droite : Détails du membre -->
+        <main class="main-content">
+            <div class="box-header">Description du Profil</div>
+            <div id="details-box" class="profile-box">
+                <div class="no-selection">
+                    <p>Sélectionnez un membre à gauche pour afficher ses détails Discord.</p>
+                </div>
+            </div>
+        </main>
+        
     </div>
 
-    <script src="app.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
