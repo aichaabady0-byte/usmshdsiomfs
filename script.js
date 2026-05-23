@@ -9,52 +9,59 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Variables globales pour stocker les données reçues
     let allMembers = [];
-    let currentLang = 'en'; // <--- Modifié ici pour démarrer en anglais !
+    let currentLang = 'en'; // Démarrage par défaut en anglais
 
     // Traductions de l'interface
     const translations = {
-        fr: {
-            tagline: "Broadcast Yourself™",
-            searchPlaceholder: "Rechercher un membre...",
-            searchBtn: "Rechercher",
-            titleList: "Membres Connectés",
-            titleDetails: "Fiche Profil USMSCord",
-            loading: "Chargement de la liste...",
-            noSelection: "Sélectionnez un membre de la communauté à gauche pour charger ses détails.",
-            statusLabel: "Statut Actuel :",
-            idLabel: "Identifiant unique :",
-            rolesLabel: "Rôles USMSCord :",
-            noRole: "Aucun rôle",
-            status: { online: "En ligne", idle: "Absent", dnd: "Ne pas déranger", offline: "Hors ligne" }
-        },
         en: {
             tagline: "Broadcast Yourself™",
             searchPlaceholder: "Search a member...",
             searchBtn: "Search",
             titleList: "Connected Members",
-            titleDetails: "USMSCord Profile Card",
+            titleDetails: "USMS Profile Card",
             loading: "Loading list...",
             noSelection: "Select a community member on the left to view their details.",
             statusLabel: "Current Status:",
             idLabel: "Unique Identifier:",
-            rolesLabel: "USMSCord Roles:",
+            rolesLabel: "USMS Roles:",
             noRole: "No role",
             status: { online: "Online", idle: "Idle", dnd: "Do Not Disturb", offline: "Offline" }
+        },
+        fr: {
+            tagline: "Broadcast Yourself™",
+            searchPlaceholder: "Rechercher un membre...",
+            searchBtn: "Rechercher",
+            titleList: "Membres Connectés",
+            titleDetails: "Fiche Profil USMS",
+            loading: "Chargement de la liste...",
+            noSelection: "Sélectionnez un membre de la communauté à gauche pour charger ses détails.",
+            statusLabel: "Statut Actuel :",
+            idLabel: "Identifiant unique :",
+            rolesLabel: "Rôles USMS :",
+            noRole: "Aucun rôle",
+            status: { online: "En ligne", idle: "Absent", dnd: "Ne pas déranger", offline: "Hors ligne" }
         },
         zh: {
             tagline: "Broadcast Yourself™ (播送自己™)",
             searchPlaceholder: "搜索成员...",
             searchBtn: "搜索",
             titleList: "在线成员",
-            titleDetails: "USMSCord 个人资料卡",
+            titleDetails: "USMS 个人资料卡",
             loading: "正在加载列表...",
             noSelection: "请选择左侧的社区成员以查看其详细信息。",
             statusLabel: "当前状态 :",
             idLabel: "唯一标识符 :",
-            rolesLabel: "USMSCord 身份组 :",
+            rolesLabel: "USMS 身份组 :",
             noRole: "无身份组",
             status: { online: "在线", idle: "闲置", dnd: "请勿打扰", offline: "离线" }
         }
+    };
+
+    // Liens vers les drapeaux rétro d'époque
+    const flagUrls = {
+        en: "https://flagcdn.com/16x12/us.png",
+        fr: "https://flagcdn.com/16x12/fr.png",
+        zh: "https://flagcdn.com/16x12/cn.png"
     };
 
     // Mettre à jour les textes fixes du site selon la langue
@@ -70,7 +77,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (noSelectDiv) noSelectDiv.innerText = t.noSelection;
     }
 
-    // Fonction de chargement principale
+    // Fonction de chargement principale depuis l'API Vercel
     async function loadDiscordMembers() {
         try {
             if (usersList) usersList.innerHTML = `<li class='user-item'>${translations[currentLang].loading}</li>`;
@@ -88,7 +95,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         } catch (error) {
             console.error(error);
-            if (usersList) usersList.innerHTML = "<li class='user-item' style='color:red;'>Erreur de chargement de l'API.</li>";
+            if (usersList) usersList.innerHTML = "<li class='user-item' style='color:red;'>API error.</li>";
         }
     }
 
@@ -97,7 +104,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!usersList) return;
         usersList.innerHTML = ""; 
 
-        // Tri : les membres qui ont des rôles en premier
+        // Tri : les membres qui ont des rôles montent en tête de liste
         const sortedMembers = [...members].sort((a, b) => {
             const aHasRoles = a.roles && a.roles.length > 0;
             const bHasRoles = b.roles && b.roles.length > 0;
@@ -127,8 +134,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Afficher la fiche de détails
-    // Afficher la fiche de détails
+    // Afficher la fiche de détails (Profil) à droite
     function selectUser(member, element) {
         if (!detailsBox) return;
         document.querySelectorAll('.user-item').forEach(item => item.classList.remove('active'));
@@ -138,12 +144,11 @@ document.addEventListener("DOMContentLoaded", () => {
         const isBot = member.username.toLowerCase().includes('bot');
         const botBadge = isBot ? `<span class="app-badge">APP</span>` : '';
 
-        // Génération des rôles avec gestion automatique de la couleur du texte
+        // Rendu des rôles + détection magique des rôles à fond blanc
         const rolesHtml = member.roles.map(role => {
             const roleColor = role.color || '#99aab5';
             
-            // Sécurité : Si la couleur est du blanc pur (#ffffff, #fff) ou un blanc Discord (#000000 renvoyé par défaut parfois)
-            // On vérifie si la couleur est blanche pour forcer le texte en noir
+            // Si le fond est blanc pur ou presque blanc, on force l'écriture en noir
             const isWhiteBackground = roleColor.toLowerCase() === '#ffffff' || roleColor.toLowerCase() === '#fff';
             const textColor = isWhiteBackground ? '#000000' : '#ffffff';
             
@@ -174,10 +179,17 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
     }
 
-    // SÉCURITÉ : On vérifie que langSelect existe bien avant de poser l'écouteur
+    // Gestion de l'écouteur du menu déroulant et mise à jour automatique du drapeau
     if (langSelect) {
         langSelect.addEventListener('change', (e) => {
             currentLang = e.target.value;
+            
+            // On attrape l'image et on remplace son URL par le bon drapeau
+            const flagImg = document.getElementById('current-flag');
+            if (flagImg && flagUrls[currentLang]) {
+                flagImg.src = flagUrls[currentLang];
+            }
+            
             updateInterfaceTexts();
             if (allMembers.length > 0) {
                 renderList(allMembers);
@@ -185,7 +197,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Lancement au démarrage
+    // Lancement de l'interface au démarrage du site
     updateInterfaceTexts();
     loadDiscordMembers();
 });
