@@ -2,12 +2,10 @@
   "name": "usmscord",
   "version": "1.0.0",
   "engines": {
-    "node": "24.x"
+    "node": "20.x"
   },
   "dependencies": {
-    "discord.js": "^14.14.1",
-    "firebase-admin": "^11.11.1",
-    "zlib-sync": "npm:empty-npm-package@1.0.0",
-    "bufferutil": "npm:empty-npm-package@1.0.0"
+    "discord.js": "14.14.1",
+    "firebase-admin": "11.11.1"
   }
 }
