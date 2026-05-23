@@ -2,22 +2,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebas
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { getDatabase, ref, set, get, child, push, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-// CONFIGURATION FIREBASE À COMPLÉTER AVEC TES INFOS
-const firebaseConfig = {
-    apiKey: "TON_API_KEY",
-    authDomain: "TON_PROJECT.firebaseapp.com",
-    databaseURL: "https://TON_PROJECT-default-rtdb.firebaseio.com",
-    projectId: "TON_PROJECT",
-    storageBucket: "TON_PROJECT.appspot.com",
-    messagingSenderId: "TON_ID",
-    appId: "TON_APP_ID"
-};
-
-// Initialisation de Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const database = getDatabase(app);
-
 document.addEventListener("DOMContentLoaded", () => {
     
     // Éléments HTML structurels
@@ -42,6 +26,9 @@ document.addEventListener("DOMContentLoaded", () => {
     let currentLang = 'en';
     let activeChannelId = null;
     let currentUserData = null;
+    
+    // Variables Firebase qui seront initialisées dynamiquement
+    let auth, database;
 
     // --- SYSTÈME D'ONGLETS DE LA SIDEBAR GAUCHE ---
     const tabButtons = document.querySelectorAll('.tab-btn');
@@ -55,7 +42,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // Écouteur pour le bouton d'administration
     btnConfigWebsite.addEventListener('click', () => {
         switchView(viewAdmin);
     });
@@ -67,15 +53,14 @@ document.addEventListener("DOMContentLoaded", () => {
         targetView.classList.remove('hidden');
     }
 
-    // --- LE DICTIONNAIRE DE TRADUCTION ---
     const translations = {
         en: { tagline: "Broadcast Yourself™", loading: "Loading...", noRole: "No role", status: { online: "Online", idle: "Idle", dnd: "Do Not Disturb", offline: "Offline" } },
         fr: { tagline: "Broadcast Yourself™", loading: "Chargement...", noRole: "Aucun rôle", status: { online: "En ligne", idle: "Absent", dnd: "Ne pas déranger", offline: "Hors ligne" } },
         zh: { tagline: "Broadcast Yourself™", loading: "正在加载...", noRole: "无身份组", status: { online: "在线", idle: "闲置", dnd: "请勿打扰", offline: "离线" } }
     };
 
-    // --- CHARGEMENT DE L'API MEMBRES ET SALONS ---
-    async function loadDiscordData() {
+    // --- CHARGEMENT INITIAL (FETCH CONFIG + DISCORD) ---
+    async function initRetroHub() {
         try {
             if (usersList) usersList.innerHTML = `<li>${translations[currentLang].loading}</li>`;
             
@@ -84,6 +69,14 @@ document.addEventListener("DOMContentLoaded", () => {
             
             if (data.error) return;
 
+            // INITIALISATION DYNAMIQUE DE FIREBASE VIA L'API VERCEL
+            if (data.firebaseConfig) {
+                const app = initializeApp(data.firebaseConfig);
+                auth = getAuth(app);
+                database = getDatabase(app);
+                setupAuthListener(); // On lance l'écoute des comptes une fois Firebase prêt
+            }
+
             // Remplissage infos serveur
             if(data.guildInfo) {
                 document.getElementById('srv-name').innerText = data.guildInfo.name || "USMS Server";
@@ -91,10 +84,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 document.getElementById('srv-roles').innerText = data.guildInfo.rolesCount || "0";
             }
 
-            // Génération de l'arbre des salons (Groups)
-            if(data.channels) {
-                renderChannels(data.channels);
-            }
+            if(data.channels) renderChannels(data.channels);
 
             allMembers = data.members || data;
             renderList(allMembers);
@@ -107,7 +97,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!channelsTree) return;
         channelsTree.innerHTML = "";
 
-        // Regrouper par catégorie
         const categories = channels.filter(c => c.type === 4).sort((a,b) => a.position - b.position);
         const textChannels = channels.filter(c => c.type === 0).sort((a,b) => a.position - b.position);
 
@@ -117,7 +106,6 @@ document.addEventListener("DOMContentLoaded", () => {
             catDiv.innerHTML = `<i class="fa-solid fa-caret-down"></i> ${cat.name}`;
             channelsTree.appendChild(catDiv);
 
-            // Salons appartenant à cette catégorie
             const children = textChannels.filter(c => c.parentId === cat.id);
             children.forEach(chan => {
                 const chanLink = document.createElement('a');
@@ -134,7 +122,7 @@ document.addEventListener("DOMContentLoaded", () => {
         activeChannelId = channel.id;
         activeChannelName.innerText = channel.name;
         switchView(viewChat);
-        listenToChannelMessages(channel.id);
+        if (database) listenToChannelMessages(channel.id);
     }
 
     function renderList(members) {
@@ -144,9 +132,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const sortedMembers = [...members].sort((a, b) => {
             const aHasRoles = a.roles && a.roles.length > 0;
             const bHasRoles = b.roles && b.roles.length > 0;
-            if (aHasRoles && !bHasRoles) return -1;
-            if (!aHasRoles && bHasRoles) return 1;
-            return 0; 
+            return (aHasRoles && !bHasRoles) ? -1 : (!aHasRoles && bHasRoles) ? 1 : 0;
         });
 
         sortedMembers.forEach(member => {
@@ -187,13 +173,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 <img class="big-avatar" src="${member.avatar}" alt="Avatar">
                 <div class="profile-title"><h2>${member.nickname} ${botBadge}</h2><span>@${member.username}</span></div>
             </div>
-            <div class="info-row"><span class="info-label">${t.statusLabel || 'Status:'}</span> <strong>${t.status[member.status] || member.status}</strong></div>
+            <div class="info-row"><span class="info-label">Status:</span> <strong>${t.status[member.status] || member.status}</strong></div>
             <div class="info-row"><span class="info-label">ID:</span> <span style="font-family:monospace;">${member.id}</span></div>
             <div class="info-row"><span class="info-label">Roles:</span><div class="roles-container">${rolesHtml || `<span>${t.noRole}</span>`}</div></div>
         `;
     }
 
-    // --- MESSAGERIE EN TEMPS RÉEL (FIREBASE REALTIME DATABASE) ---
+    // --- MESSAGERIE EN TEMPS RÉEL ---
     function listenToChannelMessages(channelId) {
         const messagesRef = ref(database, `messages/${channelId}`);
         onValue(messagesRef, (snapshot) => {
@@ -204,7 +190,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     const line = document.createElement('div');
                     line.classList.add('chat-line');
                     
-                    // Gestion du badge VIP/Vérifié Fufu et Badges sur le chat
                     let badgeCode = "";
                     if (msg.author.toLowerCase() === "fufu") {
                         badgeCode = ` <i class="fa-solid fa-circle-check" style="color:#0099e5;" title="Verified"></i><span class="web-badge" style="background:red;">Admin</span>`;
@@ -225,9 +210,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     async function sendTextMessage() {
         const text = chatInputText.value.trim();
-        if(!text || !activeChannelId || !currentUserData) return;
+        if(!text || !activeChannelId || !currentUserData || !database) return;
 
-        // On pousse le message sur Firebase et on demande au bot via l'API de le relayer sur le vrai Discord
         const msgData = {
             author: currentUserData.username,
             text: text,
@@ -238,47 +222,45 @@ document.addEventListener("DOMContentLoaded", () => {
         await push(ref(database, `messages/${activeChannelId}`), msgData);
         chatInputText.value = "";
 
-        // Relais API vers le vrai Discord
         fetch('/api-members', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 action: 'sendMessage',
                 channelId: activeChannelId,
-                content: `[WEB USER] ${currentUserData.username}: ${text}`
+                content: `[WEB USER] ${currentUserData.username}: ${text}`,
+                username: currentUserData.username
             })
         }).catch(err => console.error(err));
     }
 
-    // --- GESTION DES COMPTES AUTH (FIREBASE + SÉCURITÉ USERNAME) ---
+    // --- GESTION DES COMPTES AUTH ---
     const btnRegister = document.getElementById('btn-register');
     const btnLogin = document.getElementById('btn-login');
     const btnLogout = document.getElementById('btn-logout');
     const authError = document.getElementById('auth-error');
 
     btnRegister.addEventListener('click', async () => {
+        if (!auth || !database) return;
         const user = document.getElementById('auth-username').value.trim();
         const pass = document.getElementById('auth-password').value.trim();
         if(!user || !pass) return;
 
-        // Étape 1 : Vérifier si le pseudo unique existe déjà dans la Realtime Database
         const userCheck = await get(child(ref(database), `users/${user.toLowerCase()}`));
         if (userCheck.exists()) {
             authError.innerText = "Username already taken.";
             return;
         }
 
-        // Étape 2 : Création du compte email/password fictif sur Firebase Auth
         try {
             const fakeEmail = `${user.toLowerCase()}@usmscord.retro`;
             const userCredential = await createUserWithEmailAndPassword(auth, fakeEmail, pass);
             
-            // Profil de base inséré en DB
             const isFufu = user.toLowerCase() === "fufu";
             const newUserData = {
                 username: user,
                 uid: userCredential.user.uid,
-                isAdmin: isFufu, // Fufu devient automatiquement web admin
+                isAdmin: isFufu,
                 badges: isFufu ? ["Admin"] : []
             };
 
@@ -290,6 +272,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     btnLogin.addEventListener('click', async () => {
+        if (!auth) return;
         const user = document.getElementById('auth-username').value.trim();
         const pass = document.getElementById('auth-password').value.trim();
         if(!user || !pass) return;
@@ -303,51 +286,46 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    btnLogout.addEventListener('click', () => { signOut(auth); });
+    if (btnLogout) btnLogout.addEventListener('click', () => { if (auth) signOut(auth); });
 
-    // Surveillance de l'état de connexion de l'utilisateur
-    onAuthStateChanged(auth, async (user) => {
-        if (user) {
-            const emailPrefix = user.email.split('@')[0];
-            const snapshot = await get(child(ref(database), `users/${emailPrefix}`));
-            if(snapshot.exists()) {
-                currentUserData = snapshot.val();
-                
-                document.getElementById('auth-logged-out').classList.add('hidden');
-                document.getElementById('auth-logged-in').classList.remove('hidden');
-                document.getElementById('current-user-display').innerText = currentUserData.username;
-                
-                // Affichage des icônes vectorielles Vérifié + Admin si Fufu
-                const badgeSpan = document.getElementById('user-verified-badge');
-                if(currentUserData.username.toLowerCase() === 'fufu') {
-                    badgeSpan.innerHTML = ` <i class="fa-solid fa-circle-check" style="color:#0099e5;" title="Verified Profile"></i> <i class="fa-solid fa-user-shield" style="color:red;" title="Web Master"></i>`;
-                } else {
-                    badgeSpan.innerHTML = "";
+    function setupAuthListener() {
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const emailPrefix = user.email.split('@')[0];
+                const snapshot = await get(child(ref(database), `users/${emailPrefix}`));
+                if(snapshot.exists()) {
+                    currentUserData = snapshot.val();
+                    
+                    document.getElementById('auth-logged-out').classList.add('hidden');
+                    document.getElementById('auth-logged-in').classList.remove('hidden');
+                    document.getElementById('current-user-display').innerText = currentUserData.username;
+                    
+                    const badgeSpan = document.getElementById('user-verified-badge');
+                    if(currentUserData.username.toLowerCase() === 'fufu') {
+                        badgeSpan.innerHTML = ` <i class="fa-solid fa-circle-check" style="color:#0099e5;"></i> <i class="fa-solid fa-user-shield" style="color:red;"></i>`;
+                    } else {
+                        badgeSpan.innerHTML = "";
+                    }
+
+                    chatInputText.disabled = false;
+                    btnSendMessage.disabled = false;
+
+                    if (currentUserData.isAdmin === true) btnConfigWebsite.classList.remove('hidden');
+                    else btnConfigWebsite.classList.add('hidden');
                 }
-
-                // Déverrouillage des inputs de chat
-                chatInputText.disabled = false;
-                btnSendMessage.disabled = false;
-
-                // Affichage conditionnel du bouton "Configure Website"
-                if (currentUserData.isAdmin === true) {
-                    btnConfigWebsite.classList.remove('hidden');
-                } else {
-                    btnConfigWebsite.classList.add('hidden');
-                }
+            } else {
+                currentUserData = null;
+                document.getElementById('auth-logged-out').classList.remove('hidden');
+                document.getElementById('auth-logged-in').classList.add('hidden');
+                btnConfigWebsite.classList.add('hidden');
+                chatInputText.disabled = true;
+                btnSendMessage.disabled = true;
+                switchView(viewProfile);
             }
-        } else {
-            currentUserData = null;
-            document.getElementById('auth-logged-out').classList.remove('hidden');
-            document.getElementById('auth-logged-in').classList.add('hidden');
-            btnConfigWebsite.classList.add('hidden');
-            chatInputText.disabled = true;
-            btnSendMessage.disabled = true;
-            switchView(viewProfile);
-        }
-    });
+        });
+    }
 
-    // --- GESTION DES COMMANDES D'ADMINISTRATION RELAYÉES ---
+    // --- PANEL D'ADMINISTRATION ---
     document.getElementById('btn-execute-mod').addEventListener('click', () => {
         const userId = document.getElementById('mod-target-id').value.trim();
         const action = document.getElementById('mod-action').value;
@@ -357,10 +335,11 @@ document.addEventListener("DOMContentLoaded", () => {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: action, userId: userId })
-        }).then(res => alert("Action dispatched to bot.")).catch(err => console.error(err));
+        }).then(res => alert("Action sent to Discord bot.")).catch(err => console.error(err));
     });
 
     document.getElementById('btn-give-badge').addEventListener('click', async () => {
+        if (!database) return;
         const targetUser = document.getElementById('badge-target-user').value.trim().toLowerCase();
         const badge = document.getElementById('badge-name').value.trim();
         if(!targetUser || !badge) return;
@@ -371,11 +350,12 @@ document.addEventListener("DOMContentLoaded", () => {
             if(!u.badges) u.badges = [];
             u.badges.push(badge);
             await set(ref(database, `users/${targetUser}`), u);
-            alert("Badge added!");
+            alert("Badge given!");
         }
     });
 
     document.getElementById('btn-give-admin').addEventListener('click', async () => {
+        if (!database) return;
         const targetUser = document.getElementById('badge-target-user').value.trim().toLowerCase();
         if(!targetUser) return;
 
@@ -388,7 +368,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // Sélecteur de langue standard
     if (langSelect) {
         langSelect.addEventListener('change', (e) => {
             currentLang = e.target.value;
@@ -399,5 +378,5 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    loadDiscordData();
+    initRetroHub();
 });
