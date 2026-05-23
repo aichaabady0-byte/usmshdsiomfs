@@ -3,44 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DiscordTube - Broadcast Your Members</title>
+    <title>USMSCord - Rétro Communauté</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <!-- Header YouTube 2005 -->
+    <!-- Header USMSCord style BitView -->
     <header id="masthead">
         <div class="logo-container">
-            <h1 class="logo">Discord<span class="red-box">Tube</span></h1>
+            <h1 class="logo">USMS<span class="blue-box">Cord</span></h1>
             <span class="tagline">Broadcast Yourself™</span>
         </div>
         <div class="search-bar">
-            <input type="text" placeholder="Rechercher un membre..." disabled>
+            <input type="text" placeholder="Rechercher un membre...">
             <button class="yt-button">Rechercher</button>
         </div>
     </header>
 
-    <!-- Conteneur Principal -->
     <div class="container">
-        
-        <!-- Colonne Gauche : Liste des utilisateurs -->
+        <!-- Liste Gauche -->
         <aside class="sidebar">
-            <div class="box-header">Membres du Serveur</div>
+            <div class="box-header">Membres Connectés</div>
             <ul id="users-list" class="user-list">
-                <!-- Injecté par JavaScript -->
+                <!-- Liens injectés par script.js -->
             </ul>
         </aside>
 
-        <!-- Colonne Droite : Détails du membre -->
+        <!-- Détails Droite -->
         <main class="main-content">
-            <div class="box-header">Description du Profil</div>
+            <div class="box-header">Fiche Profil USMSCord</div>
             <div id="details-box" class="profile-box">
                 <div class="no-selection">
-                    <p>Sélectionnez un membre à gauche pour afficher ses détails Discord.</p>
+                    <p>Sélectionnez un membre de la communauté à gauche pour charger ses détails.</p>
                 </div>
             </div>
         </main>
-        
     </div>
 
     <script src="script.js"></script>
