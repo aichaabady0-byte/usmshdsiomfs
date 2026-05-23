@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>USMSCord - USMS Community</title>
+    <title>USMS - Rétro Communauté</title>
+    <!-- Ton logo s'affiche maintenant sur l'onglet du navigateur web -->
+    <link rel="icon" type="image/png" href="logo.png">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <!-- Header USMSCord style BitView / YouTube 2005 -->
+    <!-- Header USMS style BitView / YouTube 2005 -->
     <header id="masthead">
         <div class="logo-container">
             <h1 class="logo">
                 <img src="logo.png" alt="USMS Logo" class="logo-img">
-                <span class="blue-box">Cord</span>
             </h1>
-            <span class="tagline" id="txt-tagline">Broadcast Yourself™</span>
         </div>
         
         <div class="search-bar">
@@ -27,8 +27,8 @@
         <div class="language-selector">
             <label for="lang-select">Language:</label>
             <select id="lang-select">
-                <option value="en">English</option>
                 <option value="fr" selected>Français</option>
+                <option value="en">English</option>
                 <option value="zh">中文 (Chinois)</option>
             </select>
         </div>
@@ -39,13 +39,13 @@
         <aside class="sidebar">
             <div class="box-header" id="title-list">Membres Connectés</div>
             <ul id="users-list" class="user-list">
-                <!-- Les membres injectés par script.js apparaîtront ici -->
+                <!-- Les membres injectés par script.js -->
             </ul>
         </aside>
 
         <!-- Contenu de droite (Fiche Profil) -->
         <main class="main-content">
-            <div class="box-header" id="title-details">Fiche Profil USMSCord</div>
+            <div class="box-header" id="title-details">Fiche Profil USMS</div>
             <div id="details-box" class="profile-box">
                 <div class="no-selection">
                     <p id="txt-no-selection">Sélectionnez un membre de la communauté à gauche pour charger ses détails.</p>
@@ -54,7 +54,6 @@
         </main>
     </div>
 
-    <!-- Le script chargé tout en bas après la création du HTML -->
     <script src="script.js"></script>
 </body>
 </html>
