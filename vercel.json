@@ -1,0 +1,6 @@
+{
+  "version": 2,
+  "routes": [
+    { "src": "/api-members", "dest": "/api-members.js" }
+  ]
+}
