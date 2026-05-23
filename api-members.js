@@ -1,13 +1,19 @@
 const { Client, GatewayIntentBits, ChannelType } = require('discord.js');
 const admin = require('firebase-admin');
 
-// 1. INITIALISATION UNIQUE DE FIREBASE EN MODE SERVERLESS
-if (!admin.apps.length) {
-    admin.initializeApp({
-        databaseURL: process.env.FIREBASE_DATABASE_URL
-    });
+// 1. INITIALISATION SÉCURISÉE DE FIREBASE EN MODE SERVERLESS
+try {
+    if (!admin.apps.length) {
+        if (!process.env.FIREBASE_DATABASE_URL) {
+            throw new Error("La variable d'environnement FIREBASE_DATABASE_URL est manquante ou vide dans Vercel !");
+        }
+        admin.initializeApp({
+            databaseURL: process.env.FIREBASE_DATABASE_URL
+        });
+    }
+} catch (firebaseError) {
+    console.error("Firebase Initialization Crash:", firebaseError);
 }
-const db = admin.database();
 
 // 2. CONFIGURATION DU BOT DISCORD
 const client = new Client({
@@ -19,26 +25,38 @@ const client = new Client({
     ]
 });
 
-// Connexion automatique globale du bot
 let isReady = false;
-client.login(process.env.DISCORD_TOKEN);
+client.login(process.env.DISCORD_TOKEN).catch(err => {
+    console.error("Discord Login failed:", err);
+});
+
 client.once('ready', () => { 
     isReady = true; 
-    console.log(`Bot Connecté sous le pseudo: ${client.user.tag}`);
 });
 
 // 3. HANDLER PRINCIPAL DE L'API VERCEL
 module.exports = async (req, res) => {
-    // Sécurité si le bot n'a pas fini son cycle de boot
+    // Si l'initialisation a échoué en amont
+    if (!admin.apps.length) {
+        return res.status(500).json({ 
+            error: "Firebase config error", 
+            details: "FIREBASE_DATABASE_URL n'est pas configuré ou est invalide sur Vercel." 
+        });
+    }
+
     if (!isReady) {
         return res.status(503).json({ error: "Bot is starting up on Vercel, please refresh." });
     }
 
-    // Récupération de la Guild via la variable d'environnement
     const guild = client.guilds.cache.get(process.env.GUILD_ID);
     if (!guild) {
-        return res.status(404).json({ error: "Guild / Server Discord introuvable. Vérifie ton GUILD_ID." });
+        return res.status(404).json({ 
+            error: "Guild Discord introuvable", 
+            details: "Le GUILD_ID fourni ne correspond à aucun serveur accessible par le bot." 
+        });
     }
+
+    const db = admin.database();
 
     // ==========================================
     // TRAITEMENT DES ACTIONS (METHODE POST)
@@ -47,23 +65,18 @@ module.exports = async (req, res) => {
         const { action, channelId, content, username, userId } = req.body;
 
         try {
-            // ACTION A : Envoi de message (Relais Web -> Discord + Écriture Firebase)
             if (action === 'sendMessage') {
                 if (!channelId || !content || !username) {
                     return res.status(400).json({ error: "Missing parameters for sendMessage." });
                 }
 
-                // 1. Envoi réel sur le salon Discord
                 const channel = await client.channels.fetch(channelId);
                 if (!channel || channel.type !== ChannelType.GuildText) {
                     return res.status(400).json({ error: "Target channel is not a text channel." });
                 }
                 await channel.send(`[WEB USER] ${username}: ${content}`);
 
-                // 2. Double sauvegarde Firebase pour garder un historique instantané côté Web
                 const msgRef = db.ref(`messages/${channelId}`).push();
-                
-                // Attribution du badge Admin de sécurité automatique si le pseudo est "Fufu"
                 const badges = username.toLowerCase() === "fufu" ? ["Admin"] : [];
 
                 await msgRef.set({
@@ -76,35 +89,30 @@ module.exports = async (req, res) => {
                 return res.status(200).json({ success: true });
             }
 
-            // ACTION B : Modération - Expulser (Kick)
             if (action === 'kick') {
                 if (!userId) return res.status(400).json({ error: "Missing userId." });
                 const member = await guild.members.fetch(userId);
                 await member.kick("Expulsé via l'interface d'administration USMS");
-                return res.status(200).json({ success: true, message: "User kicked." });
+                return res.status(200).json({ success: true });
             }
 
-            // ACTION C : Modération - Bannir (Ban)
             if (action === 'ban') {
                 if (!userId) return res.status(400).json({ error: "Missing userId." });
                 await guild.members.ban(userId, { reason: "Banni via l'interface d'administration USMS" });
-                return res.status(200).json({ success: true, message: "User banned." });
+                return res.status(200).json({ success: true });
             }
 
-            // ACTION D : Modération - Exclure Temporairement (Timeout / Mute)
             if (action === 'timeout') {
                 if (!userId) return res.status(400).json({ error: "Missing userId." });
                 const member = await guild.members.fetch(userId);
-                // Exclusion temporaire fixée à 10 minutes (600 000 ms)
                 await member.timeout(10 * 60 * 1000, "Mute 10 minutes via l'interface USMS");
-                return res.status(200).json({ success: true, message: "User muted for 10m." });
+                return res.status(200).json({ success: true });
             }
 
-            return res.status(400).json({ error: "Unknown action requested." });
+            return res.status(400).json({ error: "Unknown action." });
 
         } catch (err) {
-            console.error("Error executing POST action:", err);
-            return res.status(500).json({ error: "Discord API action failed", details: err.message });
+            return res.status(500).json({ error: "Action execution failed", details: err.message });
         }
     }
 
@@ -112,28 +120,22 @@ module.exports = async (req, res) => {
     // LECTURE DES DONNÉES DU SERVEUR (METHODE GET)
     // ==========================================
     try {
-        // Forcer la mise à jour du cache des membres et présences Discord
         const membersList = await guild.members.fetch({ withPresences: true });
         const channelsList = await guild.channels.fetch();
 
-        // 1. Filtrer et formater les salons textuels (type 0) et les catégories (type 4)
         const dataChannels = channelsList
             .filter(c => c.type === ChannelType.GuildText || c.type === ChannelType.GuildCategory)
             .map(c => ({
                 id: c.id,
                 name: c.name,
-                type: c.type === ChannelType.GuildText ? 0 : 4, // 0 pour Text, 4 pour Catégorie dans notre script.js
+                type: c.type === ChannelType.GuildText ? 0 : 4,
                 parentId: c.parentId || null,
                 position: c.position
             }));
 
-        // 2. Filtrer et formater la liste des membres
         const dataMembers = membersList.map(m => {
-            // Détermination du statut (online, idle, dnd, offline)
             let status = 'offline';
-            if (m.presence && m.presence.status) {
-                status = m.presence.status;
-            }
+            if (m.presence && m.presence.status) status = m.presence.status;
 
             return {
                 id: m.id,
@@ -141,17 +143,12 @@ module.exports = async (req, res) => {
                 nickname: m.displayName || m.user.username,
                 avatar: m.user.displayAvatarURL({ extension: 'png', size: 128 }),
                 status: status,
-                // On retire le rôle global @everyone pour la propreté de l'affichage
                 roles: m.roles.cache
                     .filter(r => r.name !== '@everyone')
-                    .map(r => ({
-                        name: r.name,
-                        color: r.hexColor
-                    }))
+                    .map(r => ({ name: r.name, color: r.hexColor }))
             };
         });
 
-        // 3. Envoi du package de données complet au format JSON
         return res.status(200).json({
             guildInfo: {
                 name: guild.name,
@@ -159,11 +156,19 @@ module.exports = async (req, res) => {
                 rolesCount: guild.roles.cache.size
             },
             channels: dataChannels,
-            members: dataMembers
+            members: dataMembers,
+            firebaseConfig: {
+                apiKey: process.env.FIREBASE_API_KEY,
+                authDomain: process.env.FIREBASE_AUTH_DOMAIN,
+                databaseURL: process.env.FIREBASE_DATABASE_URL,
+                projectId: process.env.FIREBASE_PROJECT_ID,
+                storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+                messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
+                appId: process.env.FIREBASE_APP_ID
+            }
         });
 
     } catch (error) {
-        console.error("Error during GET execution:", error);
-        return res.status(500).json({ error: "Failed to fetch data from Discord Guild", details: error.message });
+        return res.status(500).json({ error: "Failed to fetch Discord Guild data", details: error.message });
     }
 };
