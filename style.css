@@ -8,7 +8,7 @@ body {
 }
 
 .container {
-    max-width: 1000px;
+    max-width: 1050px;
     margin: 20px auto;
     display: flex;
     gap: 20px;
@@ -36,7 +36,6 @@ body {
     margin: 0;
 }
 
-/* Redimensionnement propre de ton logo dans le bandeau */
 .logo-img {
     height: 48px;
     width: auto;
@@ -71,11 +70,19 @@ body {
     border-color: #999999;
 }
 
+.yt-button-sm {
+    background: linear-gradient(to bottom, #FFFFFF, #EAEAEA);
+    border: 1px solid #CCCCCC;
+    padding: 3px 8px;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: bold;
+}
+
 /* Sélecteur de langue */
 .language-selector {
     font-size: 12px;
     color: #555;
-    font-family: Arial, sans-serif;
 }
 
 .select-with-flag {
@@ -85,14 +92,12 @@ body {
     margin-top: 2px;
 }
 
-/* Le petit drapeau OG d'époque */
 #current-flag {
     width: 16px;
     height: 12px;
     border: 1px solid #999;
     padding: 1px;
     background: #FFF;
-    display: block;
 }
 
 .language-selector select {
@@ -100,17 +105,60 @@ body {
     padding: 2px;
     border: 1px solid #CCC;
     background: #FFF;
-    font-family: Arial, sans-serif;
 }
 
-/* Structure des blocs d'affichage (Rétro Box) */
+/* Sidebar structure et système d'onglets vectoriels */
 .sidebar {
     width: 320px;
     flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
-.main-content {
-    flex-grow: 1;
+.sidebar-tabs {
+    display: flex;
+    border: 1px solid #CCCCCC;
+    background: #EAEAEA;
+}
+
+.tab-btn {
+    flex: 1;
+    background: transparent;
+    border: none;
+    padding: 10px;
+    font-size: 16px;
+    color: #555;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+}
+
+.tab-btn:not(:last-child) {
+    border-right: 1px solid #CCCCCC;
+}
+
+.tab-btn:hover {
+    background: #F9F9F9;
+}
+
+.tab-btn.active {
+    background: #FFFFFF;
+    color: #0033CC;
+    font-weight: bold;
+}
+
+.sidebar-content-box {
+    min-height: 350px;
+    background: #FFF;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
 }
 
 .box-header {
@@ -121,14 +169,14 @@ body {
     font-size: 14px;
 }
 
-/* Liste des utilisateurs Discord */
+/* Listes d'utilisateurs */
 .user-list {
     list-style: none;
     margin: 0;
     padding: 0;
     border: 1px solid #CCCCCC;
     border-top: none;
-    max-height: 480px;
+    max-height: 350px;
     overflow-y: auto;
 }
 
@@ -139,16 +187,10 @@ body {
     padding: 8px;
     border-bottom: 1px solid #EEEEEE;
     cursor: pointer;
-    background-color: #FFFFFF;
 }
 
-.user-item:hover {
-    background-color: #F2F5F7;
-}
-
-.user-item.active {
-    background-color: #E2E9EF;
-}
+.user-item:hover { background-color: #F2F5F7; }
+.user-item.active { background-color: #E2E9EF; }
 
 .mini-avatar {
     width: 32px;
@@ -157,101 +199,189 @@ body {
     border: 1px solid #DDD;
 }
 
-.user-info {
-    display: flex;
-    flex-direction: column;
+.user-info { display: flex; flex-direction: column; }
+.nickname { font-weight: bold; font-size: 13px; color: #0033CC; }
+.role-tag { font-size: 11px; color: #666666; }
+
+/* Arbre de salons Discord (Groups) */
+.channels-container {
+    border: 1px solid #CCCCCC;
+    border-top: none;
+    padding: 10px;
+    max-height: 350px;
+    overflow-y: auto;
+    background: #FAFAFA;
 }
 
-.nickname {
+.category-row {
     font-weight: bold;
+    font-size: 11px;
+    color: #666;
+    text-transform: uppercase;
+    margin: 10px 0 5px 0;
+}
+
+.channel-click {
+    display: block;
+    padding: 4px 8px;
+    color: #333;
+    text-decoration: none;
     font-size: 13px;
+    cursor: pointer;
+}
+
+.channel-click:hover {
+    background: #EAEAEA;
     color: #0033CC;
 }
 
-.role-tag {
+.channel-click.active {
+    background: #0033CC;
+    color: #FFF;
+}
+
+/* Infos Serveur Padding */
+.server-info-padding {
+    padding: 10px;
+    border: 1px solid #CCCCCC;
+    border-top: none;
+    font-size: 13px;
+}
+
+/* Module d'authentification */
+.auth-box {
+    border: 1px solid #CCCCCC;
+    background: #FAFAFA;
+    padding-bottom: 10px;
+}
+
+.auth-box input {
+    display: block;
+    width: calc(100% - 22px);
+    margin: 8px auto;
+    padding: 4px;
+    border: 1px solid #CCC;
+    font-size: 12px;
+}
+
+.auth-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.auth-error-msg {
+    display: block;
+    text-align: center;
+    color: red;
     font-size: 11px;
-    color: #666666;
+    margin-top: 5px;
 }
 
-/* Badge [APP] pour les Bots */
-.app-badge {
-    background-color: #5865F2;
-    color: white;
-    font-size: 9px;
+#auth-logged-in {
+    padding: 10px;
+    text-align: center;
+    font-size: 13px;
+}
+
+/* Boutons d'administration */
+.admin-only-btn {
+    width: 100%;
+    background: linear-gradient(to bottom, #990000, #660000);
+    color: #FFF;
+    border: 1px solid #550000;
+    padding: 8px;
     font-weight: bold;
-    padding: 1px 4px;
-    border-radius: 3px;
-    margin-left: 5px;
-    vertical-align: middle;
-    display: inline-block;
-    line-height: 11px;
+    cursor: pointer;
+    text-align: center;
 }
 
-/* Cadre de profil de droite */
+.admin-only-btn:hover { background: #800000; }
+
+/* Contenu Principal & Système de Chat */
+.main-content {
+    flex-grow: 1;
+}
+
 .profile-box {
     border: 1px solid #CCCCCC;
     border-top: none;
     padding: 20px;
-    min-height: 250px;
+    min-height: 400px;
     background-color: #FAFAFA;
 }
 
-.no-selection {
-    color: #777;
-    text-align: center;
-    font-style: italic;
-    margin-top: 60px;
-}
-
-.profile-header {
+.chat-container {
+    border: 1px solid #CCCCCC;
+    border-top: none;
     display: flex;
-    align-items: center;
-    gap: 20px;
-    border-bottom: 1px solid #EAEAEA;
-    padding-bottom: 15px;
-    margin-bottom: 15px;
+    flex-direction: column;
+    height: 430px;
+    background: #FFF;
 }
 
-.big-avatar {
-    width: 80px;
-    height: 80px;
-    border-radius: 8px;
-    border: 1px solid #CCC;
-    background-color: #FFF;
+.chat-messages-box {
+    flex-grow: 1;
+    padding: 15px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: #FDFDFD;
 }
 
-.profile-title h2 {
-    margin: 0 0 5px 0;
-    font-size: 22px;
-    color: #111;
+.chat-line {
+    font-size: 13px;
+    line-height: 1.4;
 }
 
-.discord-tag {
-    font-size: 14px;
-    color: #555555;
-    font-family: monospace;
+.chat-tag-bot {
+    color: #555;
+    font-weight: normal;
+    font-size: 11px;
 }
 
-.info-row {
-    margin-bottom: 12px;
-    font-size: 14px;
-}
-
-.info-label {
-    display: inline-block;
-    width: 150px;
-    color: #666666;
+.chat-author {
     font-weight: bold;
+    color: #0033CC;
 }
 
-/* Rangement et Badges des rôles Discord */
-.roles-container {
+.chat-input-row {
     display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 8px;
+    border-top: 1px solid #CCCCCC;
+    padding: 10px;
+    background: #F4F4F4;
+    gap: 10px;
 }
 
+.chat-input-row input {
+    flex-grow: 1;
+    padding: 6px;
+    border: 1px solid #CCC;
+}
+
+/* Panel d'administration */
+.admin-box {
+    border: 1px solid #CCCCCC;
+    border-top: none;
+    padding: 20px;
+    background: #FAFAFA;
+    min-height: 400px;
+}
+
+.admin-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.admin-row input, .admin-row select {
+    padding: 5px;
+    border: 1px solid #CCC;
+}
+
+/* Badges Utilisateurs et Éléments techniques */
 .discord-role {
     font-size: 12px;
     font-weight: bold;
@@ -260,3 +390,24 @@ body {
     border: 1px solid rgba(0,0,0,0.1);
     display: inline-block;
 }
+
+.app-badge {
+    background-color: #5865F2;
+    color: white;
+    font-size: 9px;
+    font-weight: bold;
+    padding: 1px 4px;
+    border-radius: 3px;
+    margin-left: 5px;
+}
+
+.web-badge {
+    background: #333;
+    color: #fff;
+    font-size: 10px;
+    padding: 2px 5px;
+    border-radius: 3px;
+    margin-left: 4px;
+}
+
+.hidden { display: none !important; }
