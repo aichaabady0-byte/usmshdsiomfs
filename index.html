@@ -23,14 +23,20 @@
             <button class="yt-button" id="btn-search">Rechercher</button>
         </div>
 
-        <!-- Sélecteur de langue rétro -->
+        <!-- Sélecteur de langue rétro avec les vrais drapeaux d'époque -->
         <div class="language-selector">
-            <label for="lang-select">Language:</label>
-            <select id="lang-select">
-                <option value="fr" selected>Français</option>
-                <option value="en">English</option>
-                <option value="zh">中文 (Chinois)</option>
-            </select>
+            <span id="txt-lang-label">Language:</span>
+            <div class="flag-links">
+                <a href="#" data-lang="en" title="English">
+                    <img src="https://flagcdn.com/16x12/us.png" alt="English">
+                </a>
+                <a href="#" data-lang="fr" title="Français">
+                    <img src="https://flagcdn.com/16x12/fr.png" alt="Français">
+                </a>
+                <a href="#" data-lang="zh" title="中文">
+                    <img src="https://flagcdn.com/16x12/cn.png" alt="中文">
+                </a>
+            </div>
         </div>
     </header>
 
