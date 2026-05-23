@@ -8,10 +8,13 @@
 </head>
 <body>
 
-    <!-- Header USMSCord style BitView -->
+    <!-- Header USMSCord style BitView / YouTube 2005 -->
     <header id="masthead">
         <div class="logo-container">
-            <h1 class="logo">USMS<span class="blue-box">Cord</span></h1>
+            <h1 class="logo">
+                <img src="logo.png" alt="USMS Logo" class="logo-img">
+                <span class="blue-box">Cord</span>
+            </h1>
             <span class="tagline" id="txt-tagline">Broadcast Yourself™</span>
         </div>
         
@@ -24,23 +27,23 @@
         <div class="language-selector">
             <label for="lang-select">Language:</label>
             <select id="lang-select">
-                <option value="fr" selected>Français</option>
                 <option value="en">English</option>
+                <option value="fr" selected>Français</option>
                 <option value="zh">中文 (Chinois)</option>
             </select>
         </div>
     </header>
 
     <div class="container">
-        <!-- Liste Gauche -->
+        <!-- Liste de gauche (Membres) -->
         <aside class="sidebar">
             <div class="box-header" id="title-list">Membres Connectés</div>
             <ul id="users-list" class="user-list">
-                <!-- Liens injectés par script.js -->
+                <!-- Les membres injectés par script.js apparaîtront ici -->
             </ul>
         </aside>
 
-        <!-- Détails Droite -->
+        <!-- Contenu de droite (Fiche Profil) -->
         <main class="main-content">
             <div class="box-header" id="title-details">Fiche Profil USMSCord</div>
             <div id="details-box" class="profile-box">
@@ -51,7 +54,7 @@
         </main>
     </div>
 
-    <!-- SCRIPT BIEN PLACÉ TOUT EN BAS POUR ÉVITER LES ERREURS -->
+    <!-- Le script chargé tout en bas après la création du HTML -->
     <script src="script.js"></script>
 </body>
 </html>
