@@ -5,7 +5,7 @@ const admin = require('firebase-admin');
 try {
     if (!admin.apps.length) {
         if (!process.env.FIREBASE_DATABASE_URL) {
-            throw new Error("La variable d'environnement FIREBASE_DATABASE_URL est manquante ou vide dans Vercel !");
+            throw new Error("La variable d'environnement FIREBASE_DATABASE_URL est manquante !");
         }
         admin.initializeApp({
             databaseURL: process.env.FIREBASE_DATABASE_URL
@@ -26,17 +26,41 @@ const client = new Client({
 });
 
 let isReady = false;
-client.login(process.env.DISCORD_TOKEN).catch(err => {
-    console.error("Discord Login failed:", err);
-});
+let connectingPromise = null;
 
-client.once('ready', () => { 
-    isReady = true; 
-});
+function connectDiscord() {
+    if (isReady) return Promise.resolve();
+    if (connectingPromise) return connectingPromise;
+
+    connectingPromise = client.login(process.env.DISCORD_TOKEN)
+        .then(() => {
+            return new Promise((resolve) => {
+                if (client.readyAt) {
+                    isReady = true;
+                    resolve();
+                } else {
+                    client.once('ready', () => {
+                        isReady = true;
+                        resolve();
+                    });
+                }
+            });
+        })
+        .catch(err => {
+            connectingPromise = null;
+            console.error("Discord Login failed:", err);
+            throw err;
+        });
+
+    return connectingPromise;
+}
+
+// Déclenchement de la connexion au chargement du fichier
+connectDiscord();
 
 // 3. HANDLER PRINCIPAL DE L'API VERCEL
 module.exports = async (req, res) => {
-    // Si l'initialisation a échoué en amont
+    // Si l'initialisation Firebase a échoué en amont
     if (!admin.apps.length) {
         return res.status(500).json({ 
             error: "Firebase config error", 
@@ -44,8 +68,11 @@ module.exports = async (req, res) => {
         });
     }
 
-    if (!isReady) {
-        return res.status(503).json({ error: "Bot is starting up on Vercel, please refresh." });
+    // EN SERVERLESS : On attend activement que le bot soit connecté avant de continuer
+    try {
+        await connectDiscord();
+    } catch (authError) {
+        return res.status(500).json({ error: "Discord authentication failed", details: authError.message });
     }
 
     const guild = client.guilds.cache.get(process.env.GUILD_ID);
