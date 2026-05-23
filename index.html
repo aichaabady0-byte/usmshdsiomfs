@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>USMSCord - Rétro Communauté</title>
+    <title>USMSCord - USMS Community</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,18 +12,29 @@
     <header id="masthead">
         <div class="logo-container">
             <h1 class="logo">USMS<span class="blue-box">Cord</span></h1>
-            <span class="tagline">Broadcast Yourself™</span>
+            <span class="tagline" id="txt-tagline">Broadcast Yourself™</span>
         </div>
+        
         <div class="search-bar">
-            <input type="text" placeholder="Rechercher un membre...">
-            <button class="yt-button">Rechercher</button>
+            <input type="text" id="search-input" placeholder="Rechercher un membre...">
+            <button class="yt-button" id="btn-search">Rechercher</button>
+        </div>
+
+        <!-- Sélecteur de langue rétro -->
+        <div class="language-selector">
+            <label for="lang-select">Language:</label>
+            <select id="lang-select">
+                <option value="fr" selected>Français</option>
+                <option value="en">English</option>
+                <option value="zh">中文 (Chinois)</option>
+            </select>
         </div>
     </header>
 
     <div class="container">
         <!-- Liste Gauche -->
         <aside class="sidebar">
-            <div class="box-header">Membres Connectés</div>
+            <div class="box-header" id="title-list">Membres Connectés</div>
             <ul id="users-list" class="user-list">
                 <!-- Liens injectés par script.js -->
             </ul>
@@ -31,15 +42,16 @@
 
         <!-- Détails Droite -->
         <main class="main-content">
-            <div class="box-header">Fiche Profil USMSCord</div>
+            <div class="box-header" id="title-details">Fiche Profil USMSCord</div>
             <div id="details-box" class="profile-box">
                 <div class="no-selection">
-                    <p>Sélectionnez un membre de la communauté à gauche pour charger ses détails.</p>
+                    <p id="txt-no-selection">Sélectionnez un membre de la communauté à gauche pour charger ses détails.</p>
                 </div>
             </div>
         </main>
     </div>
 
+    <!-- SCRIPT BIEN PLACÉ TOUT EN BAS POUR ÉVITER LES ERREURS -->
     <script src="script.js"></script>
 </body>
 </html>
