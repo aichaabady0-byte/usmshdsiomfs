@@ -5,6 +5,8 @@
     "node": "24.x"
   },
   "dependencies": {
-    "discord.js": "^14.14.1"
+    "discord.js": "^14.17.3",
+    "firebase": "^10.12.0",
+    "firebase-admin": "^12.1.0"
   }
 }
