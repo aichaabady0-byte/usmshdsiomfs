@@ -1,7 +1,7 @@
 const { Client, GatewayIntentBits } = require('discord.js');
 
 module.exports = async (req, res) => {
-    // Configuration CORS indispensable pour Vercel
+    // Config CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -14,10 +14,12 @@ module.exports = async (req, res) => {
     const GUILD_ID = process.env.DISCORD_GUILD_ID;
 
     if (!BOT_TOKEN || !GUILD_ID) {
-        return res.status(500).json({ error: "Variables DISCORD_BOT_TOKEN ou DISCORD_GUILD_ID manquantes dans Vercel." });
+        return res.status(200).json({ 
+            error: "Configuration manquante", 
+            details: "Les variables DISCORD_BOT_TOKEN ou DISCORD_GUILD_ID ne sont pas configurées dans l'onglet Settings de Vercel." 
+        });
     }
 
-    // On initialise le client proprement pour une exécution Serverless rapide
     const client = new Client({
         intents: [
             GatewayIntentBits.Guilds,
@@ -26,59 +28,46 @@ module.exports = async (req, res) => {
         ]
     });
 
-    // Sécurité pour éviter que la fonction Vercel tourne à l'infini en cas de bug
-    const timeout = setTimeout(() => {
-        client.destroy();
-        return res.status(504).json({ error: "Discord a mis trop de temps à répondre." });
-    }, 8000);
-
     try {
-        // On attend que le bot se connecte à Discord
-        await new Promise((resolve, reject) => {
-            client.once('ready', resolve);
-            client.once('error', reject);
-            client.login(BOT_TOKEN).catch(reject);
-        });
+        // Connexion avec une limite de temps de 5 secondes max
+        await Promise.race([
+            client.login(BOT_TOKEN),
+            new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout de connexion Discord")), 5000))
+        ]);
 
-        // Récupération du serveur
-        const guild = await client.guilds.fetch(GUILD_ID);
-        if (!guild) {
-            throw new Error("Serveur Discord introuvable. Vérifie l'ID.");
+        // Attendre que le bot soit prêt
+        if (!client.readyAt) {
+            await new Promise((resolve) => client.once('ready', resolve));
         }
 
-        // Récupération des membres avec leurs statuts
+        const guild = await client.guilds.fetch(GUILD_ID);
+        if (!guild) {
+            client.destroy();
+            return res.status(200).json({ error: "Serveur introuvable", details: "L'ID du serveur est incorrect ou le bot n'est pas dedans." });
+        }
+
         const membersFetch = await guild.members.fetch({ withPresences: true });
         
-        // Formatage des données pour ton interface USMSCord
-        const membersList = membersFetch.map(m => {
-            const roles = m.roles.cache
+        const membersList = membersFetch.map(m => ({
+            id: m.id,
+            nickname: m.displayName || m.user.username,
+            username: m.user.username,
+            avatar: m.user.displayAvatarURL({ extension: 'png', size: 128 }),
+            status: m.presence ? m.presence.status : 'offline',
+            roles: m.roles.cache
                 .filter(r => r.name !== '@everyone')
-                .map(r => ({
-                    name: r.name,
-                    color: r.hexColor
-                }));
+                .map(r => ({ name: r.name, color: r.hexColor }))
+        }));
 
-            return {
-                id: m.id,
-                nickname: m.displayName || m.user.username,
-                username: m.user.username,
-                avatar: m.user.displayAvatarURL({ extension: 'png', size: 128 }),
-                status: m.presence ? m.presence.status : 'offline',
-                roles: roles
-            };
-        });
-
-        // On nettoie et on coupe la connexion proprement
-        clearTimeout(timeout);
         client.destroy();
-        
-        // On renvoie la liste au site
         return res.status(200).json(membersList);
 
     } catch (error) {
-        console.error("Erreur détaillée du bot :", error);
-        clearTimeout(timeout);
         try { client.destroy(); } catch(e) {}
-        return res.status(500).json({ error: "Erreur interne", details: error.message });
+        // Au lieu de crash en 500, on renvoie l'erreur proprement au format JSON pour la voir sur le site
+        return res.status(200).json({ 
+            error: "Erreur d'exécution", 
+            details: error.message 
+        });
     }
 };
