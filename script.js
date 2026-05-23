@@ -128,6 +128,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Afficher la fiche de détails
+    // Afficher la fiche de détails
     function selectUser(member, element) {
         if (!detailsBox) return;
         document.querySelectorAll('.user-item').forEach(item => item.classList.remove('active'));
@@ -137,9 +138,17 @@ document.addEventListener("DOMContentLoaded", () => {
         const isBot = member.username.toLowerCase().includes('bot');
         const botBadge = isBot ? `<span class="app-badge">APP</span>` : '';
 
-        const rolesHtml = member.roles.map(role => 
-            `<span class="discord-role" style="background-color: ${role.color || '#99aab5'}">${role.name}</span>`
-        ).join(' ');
+        // Génération des rôles avec gestion automatique de la couleur du texte
+        const rolesHtml = member.roles.map(role => {
+            const roleColor = role.color || '#99aab5';
+            
+            // Sécurité : Si la couleur est du blanc pur (#ffffff, #fff) ou un blanc Discord (#000000 renvoyé par défaut parfois)
+            // On vérifie si la couleur est blanche pour forcer le texte en noir
+            const isWhiteBackground = roleColor.toLowerCase() === '#ffffff' || roleColor.toLowerCase() === '#fff';
+            const textColor = isWhiteBackground ? '#000000' : '#ffffff';
+            
+            return `<span class="discord-role" style="background-color: ${roleColor}; color: ${textColor};">${role.name}</span>`;
+        }).join(' ');
 
         detailsBox.innerHTML = `
             <div class="profile-header">
