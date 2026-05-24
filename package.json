@@ -1,8 +1,10 @@
 {
-  "name": "usmscord-web",
+  "name": "usmscord-retro",
   "version": "1.0.0",
   "engines": {
     "node": "20.x"
   },
-  "dependencies": {}
+  "dependencies": {
+    "discord.js": "^14.14.1"
+  }
 }
