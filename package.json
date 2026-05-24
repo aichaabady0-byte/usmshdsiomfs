@@ -4,8 +4,5 @@
   "engines": {
     "node": "20.x"
   },
-  "dependencies": {
-    "discord.js": "14.14.1",
-    "firebase-admin": "11.11.1"
-  }
+  "dependencies": {}
 }
