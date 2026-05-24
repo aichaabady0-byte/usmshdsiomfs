@@ -4,19 +4,17 @@ import { getDatabase, ref, set, get, child, push, onValue } from "https://www.gs
 
 document.addEventListener("DOMContentLoaded", () => {
     
-    // Éléments HTML structurels
+    // Éléments HTML
     const usersList = document.getElementById('users-list');
     const detailsBox = document.getElementById('details-box');
     const langSelect = document.getElementById('lang-select');
     const channelsTree = document.getElementById('channels-tree');
     
-    // Éléments de vues (Panels de droite)
     const viewProfile = document.getElementById('view-profile');
     const viewChat = document.getElementById('view-chat');
     const viewAdmin = document.getElementById('view-admin');
     const btnConfigWebsite = document.getElementById('btn-config-website');
 
-    // Éléments Chat & Firebase
     const chatMessages = document.getElementById('chat-messages');
     const chatInputText = document.getElementById('chat-input-text');
     const btnSendMessage = document.getElementById('btn-send-message');
@@ -29,7 +27,23 @@ document.addEventListener("DOMContentLoaded", () => {
     
     let auth, database;
 
-    // --- SYSTÈME D'ONGLETS DE LA SIDEBAR GAUCHE ---
+    // Configuration Firebase (Met tes vraies valeurs ici, c'est public et sécurisé)
+    const firebaseConfig = {
+        apiKey: "METS_TON_API_KEY_ICI",
+        authDomain: "usmscord.firebaseapp.com",
+        databaseURL: "https://usmscord-default-rtdb.firebaseio.com/",
+        projectId: "usmscord",
+        storageBucket: "usmscord.appspot.com",
+        messagingSenderId: "TON_MESSAGING_SENDER_ID",
+        appId: "TON_APP_ID"
+    };
+
+    // Initialisation immédiate de Firebase au chargement du site
+    const app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    database = getDatabase(app);
+
+    // Système d'onglets de la barre latérale
     const tabButtons = document.querySelectorAll('.tab-btn');
     tabButtons.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -42,9 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     if (btnConfigWebsite) {
-        btnConfigWebsite.addEventListener('click', () => {
-            switchView(viewAdmin);
-        });
+        btnConfigWebsite.addEventListener('click', () => switchView(viewAdmin));
     }
 
     function switchView(targetView) {
@@ -60,57 +72,24 @@ document.addEventListener("DOMContentLoaded", () => {
         zh: { tagline: "Broadcast Yourself™", loading: "正在加载...", noRole: "无身份组", status: { online: "在线", idle: "闲置", dnd: "请勿打扰", offline: "离线" } }
     };
 
-    // --- CHARGEMENT INITIAL (FETCH CONFIG + DISCORD) ---
-    async function initRetroHub() {
-        try {
-            if (usersList) usersList.innerHTML = `<li>${translations[currentLang].loading}</li>`;
-            
-            const response = await fetch('/api-members');
-            
-            if (!response.ok) {
-                const textError = await response.text();
-                console.error("Détails erreur serveur :", textError);
-                if (usersList) usersList.innerHTML = `<li style="color:red;padding:10px;">Erreur de configuration.</li>`;
-                return;
-            }
-
-            const data = await response.json();
-            if (data.error) return;
-
-            // INITIALISATION DE FIREBASE
-            if (data.firebaseConfig) {
-                const app = initializeApp(data.firebaseConfig);
-                auth = getAuth(app);
-                database = getDatabase(app);
-                setupAuthListener();
-                listenToGlobalData();
-            }
-
-        } catch (error) {
-            console.error("Crash initialisation:", error);
-            if (usersList) usersList.innerHTML = `<li style="color:red;">Erreur de connexion.</li>`;
-        }
-    }
-
-    // Écoute les Salons et les Membres depuis Firebase de manière instantanée
+    // Écoute des données Firebase en temps réel
     function listenToGlobalData() {
         if (!database) return;
 
-        // 1. Charger les salons textuels
+        // 1. Charger les salons (poussés par le bot Discord)
         onValue(ref(database, 'channels'), (snapshot) => {
             if (snapshot.exists()) {
                 renderChannels(Object.values(snapshot.val()));
             } else {
-                // Salons par défaut si Firebase est vide
-                const defaultChannels = [
+                // Salons de secours si le bot n'a pas encore synchronisé
+                renderChannels([
                     { id: "cat-1", name: "TEXT CHANNELS", type: 4, position: 1 },
                     { id: "general", name: "general", type: 0, parentId: "cat-1", position: 2 }
-                ];
-                renderChannels(defaultChannels);
+                ]);
             }
         });
 
-        // 2. Charger les membres connectés
+        // 2. Charger les membres du site
         onValue(ref(database, 'users'), (snapshot) => {
             if (snapshot.exists()) {
                 allMembers = Object.values(snapshot.val()).map(u => ({
@@ -122,6 +101,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     roles: u.badges ? u.badges.map(b => ({ name: b, color: b === "Admin" ? "red" : "#0099e5" })) : []
                 }));
                 renderList(allMembers);
+            } else {
+                if (usersList) usersList.innerHTML = `<li style="padding:10px;color:#888;">Aucun membre inscrit</li>`;
             }
         });
     }
@@ -129,7 +110,6 @@ document.addEventListener("DOMContentLoaded", () => {
     function renderChannels(channels) {
         if (!channelsTree) return;
         channelsTree.innerHTML = "";
-
         const categories = channels.filter(c => c.type === 4).sort((a,b) => a.position - b.position);
         const textChannels = channels.filter(c => c.type === 0).sort((a,b) => a.position - b.position);
 
@@ -155,13 +135,12 @@ document.addEventListener("DOMContentLoaded", () => {
         activeChannelId = channel.id;
         if (activeChannelName) activeChannelName.innerText = channel.name;
         switchView(viewChat);
-        if (database) listenToChannelMessages(channel.id);
+        listenToChannelMessages(channel.id);
     }
 
     function renderList(members) {
         if (!usersList) return;
         usersList.innerHTML = ""; 
-
         members.forEach(member => {
             const li = document.createElement('li');
             li.classList.add('user-item');
@@ -184,10 +163,7 @@ document.addEventListener("DOMContentLoaded", () => {
         document.querySelectorAll('.user-item').forEach(item => item.classList.remove('active'));
         element.classList.add('active');
         const t = translations[currentLang];
-
-        const rolesHtml = member.roles.map(role => {
-            return `<span class="discord-role" style="background-color: ${role.color || '#0099e5'}; color: #fff;">${role.name}</span>`;
-        }).join(' ');
+        const rolesHtml = member.roles.map(role => `<span class="discord-role" style="background-color: ${role.color || '#0099e5'}; color: #fff;">${role.name}</span>`).join(' ');
 
         detailsBox.innerHTML = `
             <div class="profile-header">
@@ -199,25 +175,21 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
     }
 
-    // --- MESSAGERIE EN TEMPS RÉEL ---
+    // Gestion du Tchat
     function listenToChannelMessages(channelId) {
         if (!chatMessages) return;
-        const messagesRef = ref(database, `messages/${channelId}`);
-        onValue(messagesRef, (snapshot) => {
+        onValue(ref(database, `messages/${channelId}`), (snapshot) => {
             chatMessages.innerHTML = "";
             if (snapshot.exists()) {
-                const data = snapshot.val();
-                Object.values(data).forEach(msg => {
+                Object.values(snapshot.val()).forEach(msg => {
                     const line = document.createElement('div');
                     line.classList.add('chat-line');
-                    
                     let badgeCode = "";
                     if (msg.author.toLowerCase() === "fufu") {
-                        badgeCode = ` <i class="fa-solid fa-circle-check" style="color:#0099e5;" title="Verified"></i><span class="web-badge" style="background:red;color:white;padding:2px 4px;font-size:10px;border-radius:3px;margin-left:4px;">Admin</span>`;
+                        badgeCode = ` <i class="fa-solid fa-circle-check" style="color:#0099e5;"></i><span class="web-badge" style="background:red;color:white;padding:2px 4px;font-size:10px;border-radius:3px;margin-left:4px;">Admin</span>`;
                     } else if (msg.badges) {
                         msg.badges.forEach(b => { badgeCode += ` <span class="web-badge" style="background:#0099e5;color:white;padding:2px 4px;font-size:10px;border-radius:3px;margin-left:4px;">${b}</span>`; });
                     }
-
                     line.innerHTML = `<span class="chat-tag-bot">[WEB]</span> <span class="chat-author" style="font-weight:bold;">${msg.author}</span>${badgeCode}: <span>${msg.text}</span>`;
                     chatMessages.appendChild(line);
                 });
@@ -227,27 +199,20 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (btnSendMessage) btnSendMessage.addEventListener('click', sendTextMessage);
-    if (chatInputText) {
-        chatInputText.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendTextMessage(); });
-    }
+    if (chatInputText) chatInputText.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendTextMessage(); });
 
     async function sendTextMessage() {
-        if(!chatInputText) return;
-        const text = chatInputText.value.trim();
-        if(!text || !activeChannelId || !currentUserData || !database) return;
-
-        const msgData = {
+        if(!chatInputText || !chatInputText.value.trim() || !activeChannelId || !currentUserData) return;
+        await push(ref(database, `messages/${activeChannelId}`), {
             author: currentUserData.username,
-            text: text,
+            text: chatInputText.value.trim(),
             timestamp: Date.now(),
             badges: currentUserData.badges || []
-        };
-
-        await push(ref(database, `messages/${activeChannelId}`), msgData);
+        });
         chatInputText.value = "";
     }
 
-    // --- GESTION DES COMPTES AUTH ---
+    // Comptes et Authentification
     const btnRegister = document.getElementById('btn-register');
     const btnLogin = document.getElementById('btn-login');
     const btnLogout = document.getElementById('btn-logout');
@@ -255,55 +220,37 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (btnRegister) {
         btnRegister.addEventListener('click', async () => {
-            if (!auth || !database) return;
             const user = document.getElementById('auth-username').value.trim();
             const pass = document.getElementById('auth-password').value.trim();
             if(!user || !pass) return;
 
             const userCheck = await get(child(ref(database), `users/${user.toLowerCase()}`));
-            if (userCheck.exists()) {
-                if (authError) authError.innerText = "Username already taken.";
-                return;
-            }
+            if (userCheck.exists()) { if (authError) authError.innerText = "Username already taken."; return; }
 
             try {
-                const fakeEmail = `${user.toLowerCase()}@usmscord.retro`;
-                const userCredential = await createUserWithEmailAndPassword(auth, fakeEmail, pass);
-                
+                const userCredential = await createUserWithEmailAndPassword(auth, `${user.toLowerCase()}@usmscord.retro`, pass);
                 const isFufu = user.toLowerCase() === "fufu";
-                const newUserData = {
-                    username: user,
-                    uid: userCredential.user.uid,
-                    isAdmin: isFufu,
-                    badges: isFufu ? ["Admin"] : []
-                };
-
-                await set(ref(database, `users/${user.toLowerCase()}`), newUserData);
+                await set(ref(database, `users/${user.toLowerCase()}`), {
+                    username: user, uid: userCredential.user.uid, isAdmin: isFufu, badges: isFufu ? ["Admin"] : []
+                });
                 if (authError) authError.innerText = "";
-            } catch (err) {
-                if (authError) authError.innerText = "Password too short or network error.";
-            }
+            } catch (err) { if (authError) authError.innerText = "Error during registration."; }
         });
     }
 
     if (btnLogin) {
         btnLogin.addEventListener('click', async () => {
-            if (!auth) return;
             const user = document.getElementById('auth-username').value.trim();
             const pass = document.getElementById('auth-password').value.trim();
             if(!user || !pass) return;
-
             try {
-                const fakeEmail = `${user.toLowerCase()}@usmscord.retro`;
-                await signInWithEmailAndPassword(auth, fakeEmail, pass);
+                await signInWithEmailAndPassword(auth, `${user.toLowerCase()}@usmscord.retro`, pass);
                 if (authError) authError.innerText = "";
-            } catch (err) {
-                if (authError) authError.innerText = "Invalid credentials.";
-            }
+            } catch (err) { if (authError) authError.innerText = "Invalid credentials."; }
         });
     }
 
-    if (btnLogout) btnLogout.addEventListener('click', () => { if (auth) signOut(auth); });
+    if (btnLogout) btnLogout.addEventListener('click', () => signOut(auth));
 
     function setupAuthListener() {
         onAuthStateChanged(auth, async (user) => {
@@ -313,28 +260,16 @@ document.addEventListener("DOMContentLoaded", () => {
             const badgeSpan = document.getElementById('user-verified-badge');
 
             if (user) {
-                const emailPrefix = user.email.split('@')[0];
-                const snapshot = await get(child(ref(database), `users/${emailPrefix}`));
-                if(snapshot.exists()) {
-                    currentUserData = snapshot.val();
-                    
+                const snap = await get(child(ref(database), `users/${user.email.split('@')[0]}`));
+                if(snap.exists()) {
+                    currentUserData = snap.val();
                     if (loggedOutDiv) loggedOutDiv.classList.add('hidden');
                     if (loggedInDiv) loggedInDiv.classList.remove('hidden');
                     if (userDisplay) userDisplay.innerText = currentUserData.username;
-                    
-                    if (badgeSpan) {
-                        if(currentUserData.username.toLowerCase() === 'fufu') {
-                            badgeSpan.innerHTML = ` <i class="fa-solid fa-circle-check" style="color:#0099e5;"></i> <i class="fa-solid fa-user-shield" style="color:red;"></i>`;
-                        } else {
-                            badgeSpan.innerHTML = "";
-                        }
-                    }
-
+                    if (badgeSpan) badgeSpan.innerHTML = currentUserData.username.toLowerCase() === 'fufu' ? ` <i class="fa-solid fa-circle-check" style="color:#0099e5;"></i>` : "";
                     if (chatInputText) chatInputText.disabled = false;
                     if (btnSendMessage) btnSendMessage.disabled = false;
-
-                    if (currentUserData.isAdmin === true && btnConfigWebsite) btnConfigWebsite.classList.remove('hidden');
-                    else if (btnConfigWebsite) btnConfigWebsite.classList.add('hidden');
+                    if (currentUserData.isAdmin && btnConfigWebsite) btnConfigWebsite.classList.remove('hidden');
                 }
             } else {
                 currentUserData = null;
@@ -348,40 +283,19 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // --- PANEL D'ADMINISTRATION PROPRE ---
+    // Panel d'administration
     const btnGiveBadge = document.getElementById('btn-give-badge');
-    const btnGiveAdmin = document.getElementById('btn-give-admin');
-
     if (btnGiveBadge) {
         btnGiveBadge.addEventListener('click', async () => {
-            if (!database) return;
             const targetUser = document.getElementById('badge-target-user').value.trim().toLowerCase();
             const badge = document.getElementById('badge-name').value.trim();
-            if(!targetUser || !badge) return;
-
             const snap = await get(child(ref(database), `users/${targetUser}`));
             if(snap.exists()){
                 const u = snap.val();
                 if(!u.badges) u.badges = [];
                 u.badges.push(badge);
                 await set(ref(database, `users/${targetUser}`), u);
-                alert("Badge attribué avec succès !");
-            }
-        });
-    }
-
-    if (btnGiveAdmin) {
-        btnGiveAdmin.addEventListener('click', async () => {
-            if (!database) return;
-            const targetUser = document.getElementById('badge-target-user').value.trim().toLowerCase();
-            if(!targetUser) return;
-
-            const snap = await get(child(ref(database), `users/${targetUser}`));
-            if(snap.exists()){
-                const u = snap.val();
-                u.isAdmin = true;
-                await set(ref(database, `users/${targetUser}`), u);
-                alert("Utilisateur promu Administrateur Web !");
+                alert("Badge attribué !");
             }
         });
     }
@@ -389,12 +303,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (langSelect) {
         langSelect.addEventListener('change', (e) => {
             currentLang = e.target.value;
-            const flagImg = document.getElementById('current-flag');
             const flagUrls = { en: "https://flagcdn.com/16x12/us.png", fr: "https://flagcdn.com/16x12/fr.png", zh: "https://flagcdn.com/16x12/cn.png" };
-            if (flagImg && flagUrls[currentLang]) flagImg.src = flagUrls[currentLang];
+            document.getElementById('current-flag').src = flagUrls[currentLang];
             if (allMembers.length > 0) renderList(allMembers);
         });
     }
 
-    initRetroHub();
+    setupAuthListener();
+    listenToGlobalData();
 });
