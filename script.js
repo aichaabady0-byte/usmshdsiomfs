@@ -27,7 +27,6 @@ document.addEventListener("DOMContentLoaded", () => {
     let activeChannelId = null;
     let currentUserData = null;
     
-    // Variables Firebase qui seront initialisées dynamiquement
     let auth, database;
 
     // --- SYSTÈME D'ONGLETS DE LA SIDEBAR GAUCHE ---
@@ -42,15 +41,17 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    btnConfigWebsite.addEventListener('click', () => {
-        switchView(viewAdmin);
-    });
+    if (btnConfigWebsite) {
+        btnConfigWebsite.addEventListener('click', () => {
+            switchView(viewAdmin);
+        });
+    }
 
     function switchView(targetView) {
-        viewProfile.classList.add('hidden');
-        viewChat.classList.add('hidden');
-        viewAdmin.classList.add('hidden');
-        targetView.classList.remove('hidden');
+        if (viewProfile) viewProfile.classList.add('hidden');
+        if (viewChat) viewChat.classList.add('hidden');
+        if (viewAdmin) viewAdmin.classList.add('hidden');
+        if (targetView) targetView.classList.remove('hidden');
     }
 
     const translations = {
@@ -65,32 +66,64 @@ document.addEventListener("DOMContentLoaded", () => {
             if (usersList) usersList.innerHTML = `<li>${translations[currentLang].loading}</li>`;
             
             const response = await fetch('/api-members');
-            const data = await response.json();
             
+            if (!response.ok) {
+                const textError = await response.text();
+                console.error("Détails erreur serveur :", textError);
+                if (usersList) usersList.innerHTML = `<li style="color:red;padding:10px;">Erreur de configuration.</li>`;
+                return;
+            }
+
+            const data = await response.json();
             if (data.error) return;
 
-            // INITIALISATION DYNAMIQUE DE FIREBASE VIA L'API VERCEL
+            // INITIALISATION DE FIREBASE
             if (data.firebaseConfig) {
                 const app = initializeApp(data.firebaseConfig);
                 auth = getAuth(app);
                 database = getDatabase(app);
-                setupAuthListener(); // On lance l'écoute des comptes une fois Firebase prêt
+                setupAuthListener();
+                listenToGlobalData();
             }
 
-            // Remplissage infos serveur
-            if(data.guildInfo) {
-                document.getElementById('srv-name').innerText = data.guildInfo.name || "USMS Server";
-                document.getElementById('srv-id').innerText = data.guildInfo.id || "0000";
-                document.getElementById('srv-roles').innerText = data.guildInfo.rolesCount || "0";
-            }
-
-            if(data.channels) renderChannels(data.channels);
-
-            allMembers = data.members || data;
-            renderList(allMembers);
         } catch (error) {
-            console.error(error);
+            console.error("Crash initialisation:", error);
+            if (usersList) usersList.innerHTML = `<li style="color:red;">Erreur de connexion.</li>`;
         }
+    }
+
+    // Écoute les Salons et les Membres depuis Firebase de manière instantanée
+    function listenToGlobalData() {
+        if (!database) return;
+
+        // 1. Charger les salons textuels
+        onValue(ref(database, 'channels'), (snapshot) => {
+            if (snapshot.exists()) {
+                renderChannels(Object.values(snapshot.val()));
+            } else {
+                // Salons par défaut si Firebase est vide
+                const defaultChannels = [
+                    { id: "cat-1", name: "TEXT CHANNELS", type: 4, position: 1 },
+                    { id: "general", name: "general", type: 0, parentId: "cat-1", position: 2 }
+                ];
+                renderChannels(defaultChannels);
+            }
+        });
+
+        // 2. Charger les membres connectés
+        onValue(ref(database, 'users'), (snapshot) => {
+            if (snapshot.exists()) {
+                allMembers = Object.values(snapshot.val()).map(u => ({
+                    id: u.uid,
+                    username: u.username,
+                    nickname: u.username,
+                    avatar: "https://discord.com/assets/c09a43a372ba40e85774.png",
+                    status: "online",
+                    roles: u.badges ? u.badges.map(b => ({ name: b, color: b === "Admin" ? "red" : "#0099e5" })) : []
+                }));
+                renderList(allMembers);
+            }
+        });
     }
 
     function renderChannels(channels) {
@@ -120,7 +153,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function selectChannel(channel) {
         document.querySelectorAll('.channel-click').forEach(el => el.classList.remove('active'));
         activeChannelId = channel.id;
-        activeChannelName.innerText = channel.name;
+        if (activeChannelName) activeChannelName.innerText = channel.name;
         switchView(viewChat);
         if (database) listenToChannelMessages(channel.id);
     }
@@ -129,23 +162,15 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!usersList) return;
         usersList.innerHTML = ""; 
 
-        const sortedMembers = [...members].sort((a, b) => {
-            const aHasRoles = a.roles && a.roles.length > 0;
-            const bHasRoles = b.roles && b.roles.length > 0;
-            return (aHasRoles && !bHasRoles) ? -1 : (!aHasRoles && bHasRoles) ? 1 : 0;
-        });
-
-        sortedMembers.forEach(member => {
+        members.forEach(member => {
             const li = document.createElement('li');
             li.classList.add('user-item');
             const mainRoleName = member.roles.length > 0 ? member.roles[0].name : translations[currentLang].noRole;
-            const isBot = member.username.toLowerCase().includes('bot') || mainRoleName.toLowerCase().includes('bot');
-            const botBadge = isBot ? `<span class="app-badge">APP</span>` : '';
 
             li.innerHTML = `
-                <img class="mini-avatar" src="${member.avatar}" alt="avatar" onerror="this.src='https://discord.com/assets/c09a43a372ba40e85774.png'">
+                <img class="mini-avatar" src="${member.avatar}" alt="avatar">
                 <div class="user-info">
-                    <span class="nickname">${member.nickname} ${botBadge}</span>
+                    <span class="nickname">${member.nickname}</span>
                     <span class="role-tag">${mainRoleName}</span>
                 </div>
             `;
@@ -159,28 +184,24 @@ document.addEventListener("DOMContentLoaded", () => {
         document.querySelectorAll('.user-item').forEach(item => item.classList.remove('active'));
         element.classList.add('active');
         const t = translations[currentLang];
-        const isBot = member.username.toLowerCase().includes('bot');
-        const botBadge = isBot ? `<span class="app-badge">APP</span>` : '';
 
         const rolesHtml = member.roles.map(role => {
-            const roleColor = role.color || '#99aab5';
-            const isWhite = roleColor.toLowerCase() === '#ffffff' || roleColor.toLowerCase() === '#fff';
-            return `<span class="discord-role" style="background-color: ${roleColor}; color: ${isWhite ? '#000':'#fff'};">${role.name}</span>`;
+            return `<span class="discord-role" style="background-color: ${role.color || '#0099e5'}; color: #fff;">${role.name}</span>`;
         }).join(' ');
 
         detailsBox.innerHTML = `
             <div class="profile-header">
                 <img class="big-avatar" src="${member.avatar}" alt="Avatar">
-                <div class="profile-title"><h2>${member.nickname} ${botBadge}</h2><span>@${member.username}</span></div>
+                <div class="profile-title"><h2>${member.nickname}</h2><span>@${member.username}</span></div>
             </div>
             <div class="info-row"><span class="info-label">Status:</span> <strong>${t.status[member.status] || member.status}</strong></div>
-            <div class="info-row"><span class="info-label">ID:</span> <span style="font-family:monospace;">${member.id}</span></div>
             <div class="info-row"><span class="info-label">Roles:</span><div class="roles-container">${rolesHtml || `<span>${t.noRole}</span>`}</div></div>
         `;
     }
 
     // --- MESSAGERIE EN TEMPS RÉEL ---
     function listenToChannelMessages(channelId) {
+        if (!chatMessages) return;
         const messagesRef = ref(database, `messages/${channelId}`);
         onValue(messagesRef, (snapshot) => {
             chatMessages.innerHTML = "";
@@ -192,12 +213,12 @@ document.addEventListener("DOMContentLoaded", () => {
                     
                     let badgeCode = "";
                     if (msg.author.toLowerCase() === "fufu") {
-                        badgeCode = ` <i class="fa-solid fa-circle-check" style="color:#0099e5;" title="Verified"></i><span class="web-badge" style="background:red;">Admin</span>`;
+                        badgeCode = ` <i class="fa-solid fa-circle-check" style="color:#0099e5;" title="Verified"></i><span class="web-badge" style="background:red;color:white;padding:2px 4px;font-size:10px;border-radius:3px;margin-left:4px;">Admin</span>`;
                     } else if (msg.badges) {
-                        msg.badges.forEach(b => { badgeCode += ` <span class="web-badge">${b}</span>`; });
+                        msg.badges.forEach(b => { badgeCode += ` <span class="web-badge" style="background:#0099e5;color:white;padding:2px 4px;font-size:10px;border-radius:3px;margin-left:4px;">${b}</span>`; });
                     }
 
-                    line.innerHTML = `<span class="chat-tag-bot">[WEB USER]</span> <span class="chat-author">${msg.author}</span>${badgeCode}: <span>${msg.text}</span>`;
+                    line.innerHTML = `<span class="chat-tag-bot">[WEB]</span> <span class="chat-author" style="font-weight:bold;">${msg.author}</span>${badgeCode}: <span>${msg.text}</span>`;
                     chatMessages.appendChild(line);
                 });
                 chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -205,10 +226,13 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    btnSendMessage.addEventListener('click', sendTextMessage);
-    chatInputText.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendTextMessage(); });
+    if (btnSendMessage) btnSendMessage.addEventListener('click', sendTextMessage);
+    if (chatInputText) {
+        chatInputText.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendTextMessage(); });
+    }
 
     async function sendTextMessage() {
+        if(!chatInputText) return;
         const text = chatInputText.value.trim();
         if(!text || !activeChannelId || !currentUserData || !database) return;
 
@@ -221,17 +245,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         await push(ref(database, `messages/${activeChannelId}`), msgData);
         chatInputText.value = "";
-
-        fetch('/api-members', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                action: 'sendMessage',
-                channelId: activeChannelId,
-                content: `[WEB USER] ${currentUserData.username}: ${text}`,
-                username: currentUserData.username
-            })
-        }).catch(err => console.error(err));
     }
 
     // --- GESTION DES COMPTES AUTH ---
@@ -240,133 +253,138 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnLogout = document.getElementById('btn-logout');
     const authError = document.getElementById('auth-error');
 
-    btnRegister.addEventListener('click', async () => {
-        if (!auth || !database) return;
-        const user = document.getElementById('auth-username').value.trim();
-        const pass = document.getElementById('auth-password').value.trim();
-        if(!user || !pass) return;
+    if (btnRegister) {
+        btnRegister.addEventListener('click', async () => {
+            if (!auth || !database) return;
+            const user = document.getElementById('auth-username').value.trim();
+            const pass = document.getElementById('auth-password').value.trim();
+            if(!user || !pass) return;
 
-        const userCheck = await get(child(ref(database), `users/${user.toLowerCase()}`));
-        if (userCheck.exists()) {
-            authError.innerText = "Username already taken.";
-            return;
-        }
+            const userCheck = await get(child(ref(database), `users/${user.toLowerCase()}`));
+            if (userCheck.exists()) {
+                if (authError) authError.innerText = "Username already taken.";
+                return;
+            }
 
-        try {
-            const fakeEmail = `${user.toLowerCase()}@usmscord.retro`;
-            const userCredential = await createUserWithEmailAndPassword(auth, fakeEmail, pass);
-            
-            const isFufu = user.toLowerCase() === "fufu";
-            const newUserData = {
-                username: user,
-                uid: userCredential.user.uid,
-                isAdmin: isFufu,
-                badges: isFufu ? ["Admin"] : []
-            };
+            try {
+                const fakeEmail = `${user.toLowerCase()}@usmscord.retro`;
+                const userCredential = await createUserWithEmailAndPassword(auth, fakeEmail, pass);
+                
+                const isFufu = user.toLowerCase() === "fufu";
+                const newUserData = {
+                    username: user,
+                    uid: userCredential.user.uid,
+                    isAdmin: isFufu,
+                    badges: isFufu ? ["Admin"] : []
+                };
 
-            await set(ref(database, `users/${user.toLowerCase()}`), newUserData);
-            authError.innerText = "";
-        } catch (err) {
-            authError.innerText = "Error during registration.";
-        }
-    });
+                await set(ref(database, `users/${user.toLowerCase()}`), newUserData);
+                if (authError) authError.innerText = "";
+            } catch (err) {
+                if (authError) authError.innerText = "Password too short or network error.";
+            }
+        });
+    }
 
-    btnLogin.addEventListener('click', async () => {
-        if (!auth) return;
-        const user = document.getElementById('auth-username').value.trim();
-        const pass = document.getElementById('auth-password').value.trim();
-        if(!user || !pass) return;
+    if (btnLogin) {
+        btnLogin.addEventListener('click', async () => {
+            if (!auth) return;
+            const user = document.getElementById('auth-username').value.trim();
+            const pass = document.getElementById('auth-password').value.trim();
+            if(!user || !pass) return;
 
-        try {
-            const fakeEmail = `${user.toLowerCase()}@usmscord.retro`;
-            await signInWithEmailAndPassword(auth, fakeEmail, pass);
-            authError.innerText = "";
-        } catch (err) {
-            authError.innerText = "Invalid credentials.";
-        }
-    });
+            try {
+                const fakeEmail = `${user.toLowerCase()}@usmscord.retro`;
+                await signInWithEmailAndPassword(auth, fakeEmail, pass);
+                if (authError) authError.innerText = "";
+            } catch (err) {
+                if (authError) authError.innerText = "Invalid credentials.";
+            }
+        });
+    }
 
     if (btnLogout) btnLogout.addEventListener('click', () => { if (auth) signOut(auth); });
 
     function setupAuthListener() {
         onAuthStateChanged(auth, async (user) => {
+            const loggedOutDiv = document.getElementById('auth-logged-out');
+            const loggedInDiv = document.getElementById('auth-logged-in');
+            const userDisplay = document.getElementById('current-user-display');
+            const badgeSpan = document.getElementById('user-verified-badge');
+
             if (user) {
                 const emailPrefix = user.email.split('@')[0];
                 const snapshot = await get(child(ref(database), `users/${emailPrefix}`));
                 if(snapshot.exists()) {
                     currentUserData = snapshot.val();
                     
-                    document.getElementById('auth-logged-out').classList.add('hidden');
-                    document.getElementById('auth-logged-in').classList.remove('hidden');
-                    document.getElementById('current-user-display').innerText = currentUserData.username;
+                    if (loggedOutDiv) loggedOutDiv.classList.add('hidden');
+                    if (loggedInDiv) loggedInDiv.classList.remove('hidden');
+                    if (userDisplay) userDisplay.innerText = currentUserData.username;
                     
-                    const badgeSpan = document.getElementById('user-verified-badge');
-                    if(currentUserData.username.toLowerCase() === 'fufu') {
-                        badgeSpan.innerHTML = ` <i class="fa-solid fa-circle-check" style="color:#0099e5;"></i> <i class="fa-solid fa-user-shield" style="color:red;"></i>`;
-                    } else {
-                        badgeSpan.innerHTML = "";
+                    if (badgeSpan) {
+                        if(currentUserData.username.toLowerCase() === 'fufu') {
+                            badgeSpan.innerHTML = ` <i class="fa-solid fa-circle-check" style="color:#0099e5;"></i> <i class="fa-solid fa-user-shield" style="color:red;"></i>`;
+                        } else {
+                            badgeSpan.innerHTML = "";
+                        }
                     }
 
-                    chatInputText.disabled = false;
-                    btnSendMessage.disabled = false;
+                    if (chatInputText) chatInputText.disabled = false;
+                    if (btnSendMessage) btnSendMessage.disabled = false;
 
-                    if (currentUserData.isAdmin === true) btnConfigWebsite.classList.remove('hidden');
-                    else btnConfigWebsite.classList.add('hidden');
+                    if (currentUserData.isAdmin === true && btnConfigWebsite) btnConfigWebsite.classList.remove('hidden');
+                    else if (btnConfigWebsite) btnConfigWebsite.classList.add('hidden');
                 }
             } else {
                 currentUserData = null;
-                document.getElementById('auth-logged-out').classList.remove('hidden');
-                document.getElementById('auth-logged-in').classList.add('hidden');
-                btnConfigWebsite.classList.add('hidden');
-                chatInputText.disabled = true;
-                btnSendMessage.disabled = true;
+                if (loggedOutDiv) loggedOutDiv.classList.remove('hidden');
+                if (loggedInDiv) loggedInDiv.classList.add('hidden');
+                if (btnConfigWebsite) btnConfigWebsite.classList.add('hidden');
+                if (chatInputText) chatInputText.disabled = true;
+                if (btnSendMessage) btnSendMessage.disabled = true;
                 switchView(viewProfile);
             }
         });
     }
 
-    // --- PANEL D'ADMINISTRATION ---
-    document.getElementById('btn-execute-mod').addEventListener('click', () => {
-        const userId = document.getElementById('mod-target-id').value.trim();
-        const action = document.getElementById('mod-action').value;
-        if(!userId) return;
+    // --- PANEL D'ADMINISTRATION PROPRE ---
+    const btnGiveBadge = document.getElementById('btn-give-badge');
+    const btnGiveAdmin = document.getElementById('btn-give-admin');
 
-        fetch('/api-members', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: action, userId: userId })
-        }).then(res => alert("Action sent to Discord bot.")).catch(err => console.error(err));
-    });
+    if (btnGiveBadge) {
+        btnGiveBadge.addEventListener('click', async () => {
+            if (!database) return;
+            const targetUser = document.getElementById('badge-target-user').value.trim().toLowerCase();
+            const badge = document.getElementById('badge-name').value.trim();
+            if(!targetUser || !badge) return;
 
-    document.getElementById('btn-give-badge').addEventListener('click', async () => {
-        if (!database) return;
-        const targetUser = document.getElementById('badge-target-user').value.trim().toLowerCase();
-        const badge = document.getElementById('badge-name').value.trim();
-        if(!targetUser || !badge) return;
+            const snap = await get(child(ref(database), `users/${targetUser}`));
+            if(snap.exists()){
+                const u = snap.val();
+                if(!u.badges) u.badges = [];
+                u.badges.push(badge);
+                await set(ref(database, `users/${targetUser}`), u);
+                alert("Badge attribué avec succès !");
+            }
+        });
+    }
 
-        const snap = await get(child(ref(database), `users/${targetUser}`));
-        if(snap.exists()){
-            const u = snap.val();
-            if(!u.badges) u.badges = [];
-            u.badges.push(badge);
-            await set(ref(database, `users/${targetUser}`), u);
-            alert("Badge given!");
-        }
-    });
+    if (btnGiveAdmin) {
+        btnGiveAdmin.addEventListener('click', async () => {
+            if (!database) return;
+            const targetUser = document.getElementById('badge-target-user').value.trim().toLowerCase();
+            if(!targetUser) return;
 
-    document.getElementById('btn-give-admin').addEventListener('click', async () => {
-        if (!database) return;
-        const targetUser = document.getElementById('badge-target-user').value.trim().toLowerCase();
-        if(!targetUser) return;
-
-        const snap = await get(child(ref(database), `users/${targetUser}`));
-        if(snap.exists()){
-            const u = snap.val();
-            u.isAdmin = true;
-            await set(ref(database, `users/${targetUser}`), u);
-            alert("User promoted to Web Admin!");
-        }
-    });
+            const snap = await get(child(ref(database), `users/${targetUser}`));
+            if(snap.exists()){
+                const u = snap.val();
+                u.isAdmin = true;
+                await set(ref(database, `users/${targetUser}`), u);
+                alert("Utilisateur promu Administrateur Web !");
+            }
+        });
+    }
 
     if (langSelect) {
         langSelect.addEventListener('change', (e) => {
