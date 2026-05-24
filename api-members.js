@@ -1,7 +1,5 @@
-const { Client, GatewayIntentBits } = require('discord.js');
-
 module.exports = async (req, res) => {
-    // Gestion des headers CORS pour éviter les blocages de requêtes
+    // Config Headers CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -10,78 +8,88 @@ module.exports = async (req, res) => {
         return res.status(200).end();
     }
 
-    // Vérification de sécurité des variables d'environnement configurées sur image_71b668.png
-    if (!process.env.DISCORD_BOT_TOKEN || !process.env.DISCORD_GUILD_ID) {
+    const token = process.env.DISCORD_BOT_TOKEN;
+    const guildId = process.env.DISCORD_GUILD_ID;
+
+    if (!token || !guildId) {
         return res.status(500).json({ 
-            error: "Missing Environment Variables", 
-            details: "Please double check DISCORD_BOT_TOKEN and DISCORD_GUILD_ID in Vercel."
+            error: "Missing Configuration", 
+            details: "DISCORD_BOT_TOKEN or DISCORD_GUILD_ID is not set in Vercel." 
         });
     }
 
-    // Création d'une nouvelle instance à chaque appel (Recommandé pour le Serverless Vercel)
-    const client = new Client({
-        intents: [
-            GatewayIntentBits.Guilds,
-            GatewayIntentBits.GuildMembers,
-            GatewayIntentBits.GuildPresences
-        ]
-    });
-
     try {
-        // On crée une promesse qui attend que le bot se connecte et soit opérationnel
-        await new Promise((resolve, reject) => {
-            client.once('ready', () => resolve());
-            client.login(process.env.DISCORD_BOT_TOKEN).catch(reject);
-            
-            // Timeout de sécurité si Discord met trop de temps à répondre (5 secondes)
-            setTimeout(() => reject(new Error('Discord connection timeout')), 5000);
+        // 1. Récupérer les informations du serveur (pour le nom du serveur)
+        const guildRes = await fetch(`https://discord.com/api/v10/guilds/${guildId}`, {
+            headers: { 'Authorization': `Bot ${token}` }
         });
 
-        // Récupération du serveur (Guild)
-        const guildId = process.env.DISCORD_GUILD_ID;
-        const guild = await client.guilds.fetch(guildId);
-        
-        if (!guild) {
-            client.destroy();
-            return res.status(404).json({ error: "Guild not found. Verify your DISCORD_GUILD_ID." });
+        if (!guildRes.ok) {
+            const errText = await guildRes.text();
+            throw new Error(`Discord Guild API responded with status ${guildRes.status}: ${errText}`);
         }
+        const guildData = await guildRes.json();
 
-        // Récupération des membres et de leurs statuts de présence
-        const members = await guild.members.fetch({ withPresences: true });
-        
-        const memberList = members.map(m => {
-            const roles = m.roles.cache
-                .filter(r => r.name !== '@everyone')
-                .sort((a, b) => b.position - a.position)
-                .map(r => ({ name: r.name, color: r.hexColor }));
+        // 2. Récupérer la liste des rôles du serveur pour faire la correspondance des couleurs plus tard
+        const rolesRes = await fetch(`https://discord.com/api/v10/guilds/${guildId}/roles`, {
+            headers: { 'Authorization': `Bot ${token}` }
+        });
+        const allRoles = rolesRes.ok ? await rolesRes.json() : [];
+        const rolesMap = new Map(allRoles.map(r => [r.id, { name: r.name, color: '#' + r.color.toString(16).padStart(6, '0') }]));
+
+        // 3. Récupérer la liste des membres (limité aux 1000 premiers membres par défaut via API)
+        const membersRes = await fetch(`https://discord.com/api/v10/guilds/${guildId}/members?limit=1000`, {
+            headers: { 'Authorization': `Bot ${token}` }
+        });
+
+        if (!membersRes.ok) {
+            const errText = await membersRes.text();
+            throw new Error(`Discord Members API responded with status ${membersRes.status}: ${errText}`);
+        }
+        const membersData = await membersRes.json();
+
+        // 4. Structurer les données proprement pour ton script.js
+        const memberList = membersData.map(m => {
+            // Associer et trier les rôles du membre par position
+            const memberRoles = (m.roles || [])
+                .map(roleId => {
+                    const found = rolesMap.get(roleId);
+                    const fullRole = allRoles.find(r => r.id === roleId);
+                    return {
+                        name: found ? found.name : 'Unknown',
+                        color: found ? found.color : '#666666',
+                        position: fullRole ? fullRole.position : 0
+                    };
+                })
+                .sort((a, b) => b.position - a.position);
+
+            // Gérer l'avatar de l'utilisateur (fallback sur l'avatar par défaut de Discord s'il n'en a pas)
+            let avatarUrl = "https://discord.com/assets/c09a1f2c4e3434665332.svg";
+            if (m.user.avatar) {
+                avatarUrl = `https://cdn.discordapp.com/avatars/${m.user.id}/${m.user.avatar}.png?size=128`;
+            }
 
             return {
-                id: m.id,
+                id: m.user.id,
                 username: m.user.username,
-                nickname: m.displayName,
-                avatar: m.user.displayAvatarURL({ extension: 'png', size: 128 }),
-                status: m.presence ? m.presence.status : "offline",
-                roles: roles,
-                joinedAt: m.joinedAt
+                nickname: m.nick || m.user.global_name || m.user.username,
+                avatar: avatarUrl,
+                status: "online", // Par défaut "online" via HTTP (l'API HTTP basique ne donne pas le statut live instantané sans passer par Gateway)
+                roles: memberRoles.map(r => ({ name: r.name, color: r.color })),
+                joinedAt: m.joined_at
             };
         });
 
-        // Fermeture propre de la connexion Discord avant de répondre
-        client.destroy();
-
         return res.status(200).json({
-            serverName: guild.name,
-            memberCount: guild.memberCount,
+            serverName: guildData.name,
+            memberCount: memberList.length,
             members: memberList
         });
 
     } catch (error) {
-        // En cas de crash, on déconnecte le client pour éviter les fuites de mémoire
-        try { client.destroy(); } catch(e) {}
-        
-        console.error("Backend Error:", error);
+        console.error("Backend Error Details:", error.message);
         return res.status(500).json({ 
-            error: "Failed to fetch Discord members", 
+            error: "Failed to fetch Discord data via HTTP", 
             details: error.message 
         });
     }
