@@ -50,18 +50,23 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     async function loadMembers() {
-        try {
-            const response = await fetch('/api/members');
-            if (!response.ok) throw new Error('API Error');
-            const data = await response.json();
-            
-            allMembers = data.members || [];
-            renderGrid(allMembers);
-        } catch (error) {
-            console.error(error);
-            membersGrid.innerHTML = `<div class="loading" style="color:red;">${translations[currentLang].error}</div>`;
+    try {
+        const response = await fetch('/api/members');
+        const data = await response.json();
+        
+        if (!response.ok) {
+            // Affichage précis dans la console pour savoir exactement ce qui bloque
+            console.error("DÉTAILS DE L'ERREUR 500 DE DISCORD :", data);
+            throw new Error(data.error || 'API Error');
         }
+        
+        allMembers = data.members || [];
+        renderGrid(allMembers);
+    } catch (error) {
+        console.error(error);
+        membersGrid.innerHTML = `<div class="loading" style="color:red;">${translations[currentLang].error}</div>`;
     }
+}
 
     function renderGrid(membersList) {
         membersGrid.innerHTML = "";
