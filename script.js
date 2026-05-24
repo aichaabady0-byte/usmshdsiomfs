@@ -31,11 +31,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const firebaseConfig = {
         apiKey: "AIzaSyD3l4bnRhUUXjYMkXHcQPZpfocCVZWMjOg",
         authDomain: "usmscord.firebaseapp.com",
-        databaseURL: "https://usmscord-default-rtdb.firebaseio.com/",
+        databaseURL: "https://usmscord-default-rtdb.firebaseio.com",
         projectId: "usmscord",
-        storageBucket: "usmscord.appspot.com",
-        messagingSenderId: "TON_MESSAGING_SENDER_ID",
-        appId: "TON_APP_ID"
+        storageBucket: "usmscord.firebasestorage.app",
+        messagingSenderId: "1035262779396",
+        appId: "1:1035262779396:web:3802738f0f998834681551"
     };
 
     // Initialisation immédiate de Firebase
