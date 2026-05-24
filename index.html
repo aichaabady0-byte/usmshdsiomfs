@@ -3,162 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>USMSCord - USMS Hub</title>
-    <link rel="icon" type="image/png" href="logo.png">
+    <title>USMSCord - Broadcast Yourself™</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Icônes Vectorielles (Font Awesome) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- FontAwesome pour les petites icônes rétro -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
-    <!-- Header USMS style BitView -->
-    <header id="masthead">
-        <div class="logo-container">
-            <h1 class="logo">
-                <img src="logo.png" alt="USMS Logo" class="logo-img">
-            </h1>
+    <!-- UTILITY HEADER (Barre du haut 2006) -->
+    <div id="util-bar">
+        <div class="util-left">
+            <span id="tagline">Broadcast Yourself™</span>
         </div>
-        
-        <div class="search-bar">
-            <input type="text" id="search-input" placeholder="Search a member...">
-            <button class="yt-button" id="btn-search">Search</button>
-        </div>
-
-        <!-- Sélecteur de langue rétro avec drapeau -->
-        <div class="language-selector">
+        <div class="util-right">
             <label for="lang-select">Language:</label>
-            <div class="select-with-flag">
-                <img id="current-flag" src="https://flagcdn.com/16x12/us.png" alt="Flag">
-                <select id="lang-select">
-                    <option value="en" selected>English</option>
-                    <option value="fr">Français</option>
-                    <option value="zh">中文 (Chinois)</option>
-                </select>
-            </div>
+            <select id="lang-select">
+                <option value="en" selected>English</option>
+                <option value="fr">Français</option>
+                <option value="zh">中文</option>
+            </select>
+            <img id="current-flag" src="https://flagcdn.com/16x12/us.png" alt="flag">
         </div>
-    </header>
-
-    <div class="container">
-        <!-- BARRE LATÉRALE GAUCHE ULTRA COMPLÈTE -->
-        <aside class="sidebar">
-            <!-- Système d'Onglets Rétro -->
-            <div class="sidebar-tabs">
-                <button class="tab-btn active" data-target="tab-members" title="Members">
-                    <i class="fa-solid fa-users"></i>
-                </button>
-                <button class="tab-btn" data-target="tab-groups" title="Groups & Channels">
-                    <i class="fa-solid fa-folder-open"></i>
-                </button>
-                <button class="tab-btn" data-target="tab-server" title="Server Info">
-                    <i class="fa-solid fa-server"></i>
-                </button>
-            </div>
-
-            <!-- CONTENU DES ONGLETS -->
-            <div class="sidebar-content-box">
-                <!-- Onglet 1: Membres (Actuel) -->
-                <div id="tab-members" class="tab-content active">
-                    <div class="box-header" id="title-list">Connected Members</div>
-                    <ul id="users-list" class="user-list"></ul>
-                </div>
-
-                <!-- Onglet 2: Groupes & Salons (Discord) -->
-                <div id="tab-groups" class="tab-content">
-                    <div class="box-header">Channels</div>
-                    <div id="channels-tree" class="channels-container">
-                        <!-- Rempli par script.js (Catégories et salons) -->
-                    </div>
-                </div>
-
-                <!-- Onglet 3: Server Info -->
-                <div id="tab-server" class="tab-content">
-                    <div class="box-header">Server Guild Info</div>
-                    <div id="server-info-box" class="server-info-padding">
-                        <p><i class="fa-solid fa-hashtag"></i> <strong>Name:</strong> <span id="srv-name">Loading...</span></p>
-                        <p><i class="fa-solid fa-id-card"></i> <strong>ID:</strong> <span id="srv-id">Loading...</span></p>
-                        <p><i class="fa-solid fa-user-shield"></i> <strong>Roles count:</strong> <span id="srv-roles">0</span></p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- BOUTON ADMIN DE CONFIGURATION (Masqué par défaut) -->
-            <button id="btn-config-website" class="admin-only-btn hidden">
-                <i class="fa-solid fa-gear"></i> Configure Website
-            </button>
-
-            <!-- ESPACE DE CONNEXION FIREBASE (Bas de page style vieux forum) -->
-            <div class="auth-box">
-                <div class="box-header">Account Login / Register</div>
-                <div id="auth-logged-out">
-                    <input type="text" id="auth-username" placeholder="Username (ex: Fufu)">
-                    <input type="password" id="auth-password" placeholder="Password">
-                    <div class="auth-buttons">
-                        <button id="btn-login" class="yt-button-sm">Login</button>
-                        <button id="btn-register" class="yt-button-sm">Register</button>
-                    </div>
-                    <span id="auth-error" class="auth-error-msg"></span>
-                </div>
-                <div id="auth-logged-in" class="hidden">
-                    <p>Welcome, <span id="current-user-display"></span> <span id="user-verified-badge"></span></p>
-                    <button id="btn-logout" class="yt-button-sm">Logout</button>
-                </div>
-            </div>
-        </aside>
-
-        <!-- ZONE CENTRALE DROITE (DÉTAILS OU MESSAGERIE CHAT) -->
-        <main class="main-content">
-            <!-- Vue 1 : Profil des membres -->
-            <div id="view-profile">
-                <div class="box-header" id="title-details">USMS Profile Card</div>
-                <div id="details-box" class="profile-box">
-                    <div class="no-selection">
-                        <p id="txt-no-selection">Select a community member on the left to view their details.</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Vue 2 : Chat en direct du salon sélectionné -->
-            <div id="view-chat" class="hidden">
-                <div class="box-header"><i class="fa-solid fa-comment"></i> Chat: #<span id="active-channel-name">general</span></div>
-                <div class="chat-container">
-                    <div id="chat-messages" class="chat-messages-box">
-                        <!-- Les messages s'affichent ici -->
-                    </div>
-                    <div class="chat-input-row">
-                        <input type="text" id="chat-input-text" placeholder="Type your message here..." disabled>
-                        <button id="btn-send-message" class="yt-button" disabled>Send</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Vue 3 : Panel d'Administration Secret -->
-            <div id="view-admin" class="hidden">
-                <div class="box-header"><i class="fa-solid fa-lock"></i> Administration Control Panel</div>
-                <div class="admin-box">
-                    <h3>Moderation Tools</h3>
-                    <div class="admin-row">
-                        <input type="text" id="mod-target-id" placeholder="Discord User ID">
-                        <select id="mod-action">
-                            <option value="kick">Kick Member</option>
-                            <option value="ban">Ban Member</option>
-                            <option value="timeout">Timeout (Mute)</option>
-                        </select>
-                        <button id="btn-execute-mod" class="yt-button">Execute</button>
-                    </div>
-                    <hr>
-                    <h3>Manage Web Badges & Access</h3>
-                    <div class="admin-row">
-                        <input type="text" id="badge-target-user" placeholder="Firebase Username">
-                        <input type="text" id="badge-name" placeholder="Badge Name (ex: VIP)">
-                        <button id="btn-give-badge" class="yt-button">Give Badge</button>
-                        <button id="btn-give-admin" class="yt-button" style="background: #ffcccc;">Promote to Web Admin</button>
-                    </div>
-                </div>
-            </div>
-        </main>
     </div>
 
-    <!-- SDK Firebase v9 (Modules) hébergés via CDN officiel -->
+    <!-- MAIN HEADER LOGO & TABS -->
+    <header id="main-header">
+        <div class="logo-container">
+            <!-- Le fameux logo avec la boîte rouge/orange autour de "Cord" -->
+            <div class="logo-usms">USMS<span class="logo-box">Cord</span></div>
+        </div>
+        
+        <!-- Onglets style YouTube Classique -->
+        <nav id="nav-tabs">
+            <a href="#" class="tab-item">Home</a>
+            <a href="#" class="tab-item">Videos</a>
+            <a href="#" class="tab-item id-active">Channels & Members</a>
+            <a href="#" class="tab-item">Community</a>
+        </nav>
+    </header>
+
+    <!-- MAIN CONTENT AREA -->
+    <div id="page-container">
+        
+        <!-- COLONNE GAUCHE : LISTE DES MEMBRES DISCORD -->
+        <div id="left-column">
+            <div class="section-box">
+                <div class="box-title">
+                    <span id="box-title-text">Discord Members</span>
+                </div>
+                <div class="box-body">
+                    <ul id="users-list">
+                        <li class="loading-item">Loading members...</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- COLONNE DROITE : PROFIL DU MEMBRE SÉLECTIONNÉ -->
+        <div id="right-column">
+            <div class="section-box blue-box">
+                <div class="box-title">
+                    <span id="profile-title-text">Member Profile Card</span>
+                </div>
+                <div class="box-body" id="details-box">
+                    <div class="no-selection">
+                        <i class="fa-solid fa-arrow-left" style="margin-right: 5px;"></i>
+                        Select a member on the left to inspect their vintage profile card.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- FOOTER 2006 -->
+    <footer id="retro-footer">
+        <div>
+            <a href="#">About Us</a> | <a href="#">Terms of Use</a> | <a href="#">Privacy Policy</a> | <a href="#">Help</a>
+        </div>
+        <div class="copyright">Copyright © 2006 USMSCord, LLC</div>
+    </footer>
+
+    <!-- Liaison avec Firebase et le script -->
     <script type="module" src="script.js"></script>
 </body>
 </html>
