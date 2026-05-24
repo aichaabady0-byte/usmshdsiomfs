@@ -6,67 +6,65 @@ document.addEventListener("DOMContentLoaded", () => {
     const currentFlag = document.getElementById('current-flag');
     const pageTitle = document.getElementById('page-title');
     
-    const profileModal = document.getElementById('profile-modal');
+    // Zone de détails rétro
+    const profileDetailZone = document.getElementById('profile-detail-zone');
     const modalBody = document.getElementById('modal-body');
-    const closeModalBtn = document.querySelector('.close-modal-btn');
+    const detailTitleText = document.getElementById('detail-title-text');
 
     let allMembers = [];
     let currentLang = 'en';
 
     const translations = {
         en: {
-            title: "Server Members",
+            title: "Channels / Server Members",
             searchPlaceholder: "Search a member...",
-            loading: "Loading members from Discord...",
+            loading: "Loading members...",
             error: "Failed to load server members.",
             noRole: "No Role",
-            joinDate: "Join Date",
-            nickname: "Nickname",
-            roles: "Roles",
-            username: "Username"
+            joinDate: "Join Date:",
+            nickname: "Nickname:",
+            roles: "Roles:",
+            username: "Username:",
+            inspectTitle: "Member Profile Inspection"
         },
         fr: {
-            title: "Membres du Serveur",
+            title: "Chaînes / Membres du Serveur",
             searchPlaceholder: "Rechercher un membre...",
-            loading: "Chargement des membres depuis Discord...",
-            error: "Échec du chargement des membres.",
+            loading: "Chargement...",
+            error: "Échec du chargement.",
             noRole: "Aucun rôle",
-            joinDate: "Date d'arrivée",
-            nickname: "Pseudo",
-            roles: "Rôles",
-            username: "Nom d'utilisateur"
+            joinDate: "Date d'arrivée :",
+            nickname: "Pseudo :",
+            roles: "Rôles :",
+            username: "Nom d'utilisateur :",
+            inspectTitle: "Inspection du Profil Membre"
         },
         zh: {
-            title: "服务器成员",
+            title: "频道 / 服务器成员列表",
             searchPlaceholder: "搜索成员...",
-            loading: "正在从 Discord 加载成员...",
+            loading: "正在加载...",
             error: "无法加载成员数据。",
             noRole: "无身份组",
-            joinDate: "加入日期",
-            nickname: "昵称",
-            roles: "身份组",
-            username: "用户名"
+            joinDate: "加入日期:",
+            nickname: "昵称:",
+            roles: "身份组:",
+            username: "用户名:",
+            inspectTitle: "成员详细档案"
         }
     };
 
     async function loadMembers() {
-    try {
-        const response = await fetch('/api/members');
-        const data = await response.json();
-        
-        if (!response.ok) {
-            // Affichage précis dans la console pour savoir exactement ce qui bloque
-            console.error("DÉTAILS DE L'ERREUR 500 DE DISCORD :", data);
-            throw new Error(data.error || 'API Error');
+        try {
+            const response = await fetch('/api/members');
+            if (!response.ok) throw new Error('API Error');
+            const data = await response.json();
+            allMembers = data.members || [];
+            renderGrid(allMembers);
+        } catch (error) {
+            console.error(error);
+            membersGrid.innerHTML = `<div class="loading" style="color:red;">${translations[currentLang].error}</div>`;
         }
-        
-        allMembers = data.members || [];
-        renderGrid(allMembers);
-    } catch (error) {
-        console.error(error);
-        membersGrid.innerHTML = `<div class="loading" style="color:red;">${translations[currentLang].error}</div>`;
     }
-}
 
     function renderGrid(membersList) {
         membersGrid.innerHTML = "";
@@ -88,23 +86,22 @@ document.addEventListener("DOMContentLoaded", () => {
             card.innerHTML = `
                 <div class="avatar-container">
                     <img class="card-avatar" src="${member.avatar}" alt="avatar">
-                    <span class="status-dot ${member.status}"></span>
                 </div>
                 <div class="card-name">${member.nickname}</div>
-                <div class="card-role" style="color: ${topRoleColor === '#000000' ? '#555' : topRoleColor};">
+                <div class="card-role" style="color: ${topRoleColor === '#000000' ? '#666' : topRoleColor};">
                     ${topRoleName}
                 </div>
             `;
 
-            card.addEventListener('click', () => openProfileModal(member));
+            // Remplacement : au clic, on remplit le panneau du bas
+            card.addEventListener('click', () => showVintageProfile(member));
             membersGrid.appendChild(card);
         });
     }
 
-    function openProfileModal(member) {
+    function showVintageProfile(member) {
         const t = translations[currentLang];
         
-        // Formatage de la date en fonction de la langue sélectionnée
         let formattedDate = "N/A";
         if (member.joinedAt) {
             const dateObj = new Date(member.joinedAt);
@@ -114,16 +111,16 @@ document.addEventListener("DOMContentLoaded", () => {
         
         const rolesHtml = member.roles && member.roles.length > 0
             ? member.roles.map(r => {
-                const color = r.color === '#000000' ? '#444444' : r.color;
-                return `<span class="modal-role-badge" style="color: ${color};">${r.name}</span>`;
+                const color = r.color === '#000000' ? '#666' : r.color;
+                return `<span class="modal-role-badge" style="color: ${color}; border-color: ${color};">${r.name}</span>`;
             }).join('')
             : `<div>${t.noRole}</div>`;
 
         modalBody.innerHTML = `
-            <div class="modal-header">
+            <div class="profile-header">
                 <img class="modal-avatar" src="${member.avatar}" alt="avatar">
                 <div class="modal-title-info">
-                    <h2>${member.nickname}</h2>
+                    <h2><strong>${member.nickname}</strong></h2>
                     <span>@${member.username}</span>
                 </div>
             </div>
@@ -144,13 +141,10 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
         `;
 
-        profileModal.classList.add('open');
+        // Afficher la boîte d'inspection d'époque
+        profileDetailZone.style.display = "block";
+        profileDetailZone.scrollIntoView({ behavior: 'smooth' });
     }
-
-    closeModalBtn.addEventListener('click', () => profileModal.classList.remove('open'));
-    profileModal.addEventListener('click', (e) => {
-        if(e.target === profileModal) profileModal.classList.remove('open');
-    });
 
     searchInput.addEventListener('input', (e) => {
         const query = e.target.value.toLowerCase().trim();
@@ -169,9 +163,10 @@ document.addEventListener("DOMContentLoaded", () => {
         
         const t = translations[currentLang];
         pageTitle.innerText = t.title;
+        detailTitleText.innerText = t.inspectTitle;
         searchInput.placeholder = t.searchPlaceholder;
         
-        profileModal.classList.remove('open');
+        profileDetailZone.style.display = "none";
 
         if (allMembers.length > 0) renderGrid(allMembers);
     });
