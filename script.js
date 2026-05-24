@@ -16,14 +16,15 @@ document.addEventListener("DOMContentLoaded", () => {
     let database;
 
     // TA CONFIGURATION FIREBASE SECRÈTE
+// CONFIGURATION FIREBASE (À remplir avec tes vraies clés de ta console Firebase)
     const firebaseConfig = {
-        apiKey: "METS_TON_API_KEY_ICI",
+        apiKey: "AIzaSyD3l4bnRhUUXjYMkXHcQPZpfocCVZWMjOg",
         authDomain: "usmscord.firebaseapp.com",
-        databaseURL: "https://usmscord-default-rtdb.firebaseio.com/",
+        databaseURL: "https://usmscord-default-rtdb.firebaseio.com",
         projectId: "usmscord",
-        storageBucket: "usmscord.appspot.com",
-        messagingSenderId: "TON_MESSAGING_SENDER_ID",
-        appId: "TON_APP_ID"
+        storageBucket: "usmscord.firebasestorage.app",
+        messagingSenderId: "1035262779396",
+        appId: "1:1035262779396:web:3802738f0f998834681551"
     };
 
     const app = initializeApp(firebaseConfig);
