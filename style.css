@@ -1,413 +1,299 @@
-/* Base & Global Styles */
-body {
+/* RESET ET POLICES RETRO (Arial / Verdana) */
+* {
+    box-sizing: border-box;
     margin: 0;
     padding: 0;
-    font-family: Arial, sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+}
+
+body {
     background-color: #FFFFFF;
     color: #333333;
 }
 
-.container {
-    max-width: 1050px;
-    margin: 20px auto;
-    display: flex;
-    gap: 20px;
-    padding: 0 10px;
-}
-
-/* Header & Logo Interface */
-#masthead {
+/* UTILITY BAR (Tout en haut) */
+#util-bar {
+    background-color: #EAEAEA;
+    border-bottom: 1px solid #CCCCCC;
+    padding: 4px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px 30px;
-    background-color: #F4F4F4;
-    border-bottom: 1px solid #E5E5E5;
 }
 
-.logo-container {
-    display: flex;
-    flex-direction: column;
+#tagline {
+    font-style: italic;
+    color: #666666;
+    font-weight: bold;
 }
 
-.logo {
+.util-right {
     display: flex;
     align-items: center;
-    margin: 0;
-}
-
-.logo-img {
-    height: 48px;
-    width: auto;
-    object-fit: contain;
-}
-
-/* Barre de recherche classique */
-.search-bar {
-    display: flex;
     gap: 5px;
 }
 
-.search-bar input {
-    width: 250px;
-    padding: 5px;
-    border: 1px solid #CCCCCC;
-    font-size: 14px;
-}
-
-.yt-button {
-    background: linear-gradient(to bottom, #FFFFFF, #EAEAEA);
-    border: 1px solid #CCCCCC;
-    padding: 5px 12px;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 13px;
-    color: #333;
-}
-
-.yt-button:hover {
-    background: #EAEAEA;
-    border-color: #999999;
-}
-
-.yt-button-sm {
-    background: linear-gradient(to bottom, #FFFFFF, #EAEAEA);
-    border: 1px solid #CCCCCC;
-    padding: 3px 8px;
-    cursor: pointer;
-    font-size: 11px;
-    font-weight: bold;
-}
-
-/* Sélecteur de langue */
-.language-selector {
-    font-size: 12px;
-    color: #555;
-}
-
-.select-with-flag {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-top: 2px;
+#lang-select {
+    padding: 1px;
 }
 
 #current-flag {
-    width: 16px;
-    height: 12px;
     border: 1px solid #999;
-    padding: 1px;
-    background: #FFF;
 }
 
-.language-selector select {
-    font-size: 12px;
-    padding: 2px;
-    border: 1px solid #CCC;
-    background: #FFF;
+/* MAIN HEADER & LOGO */
+#main-header {
+    padding: 15px 20px 0 20px;
 }
 
-/* Sidebar structure et système d'onglets vectoriels */
-.sidebar {
-    width: 320px;
-    flex-shrink: 0;
+.logo-usms {
+    font-size: 28px;
+    font-weight: bold;
+    font-family: "Arial Black", Gadget, sans-serif;
+    letter-spacing: -1px;
+    color: #000;
+}
+
+.logo-box {
+    font-size: 28px;
+    background-color: #E64C3C; /* Rouge/Orange YouTube */
+    color: #FFFFFF;
+    padding: 1px 5px;
+    border-radius: 5px;
+    margin-left: 2px;
+}
+
+/* NAV TABS (Design YouTube 2006) */
+#nav-tabs {
+    margin-top: 15px;
+    border-bottom: 2px solid #EAEAEA;
     display: flex;
-    flex-direction: column;
+    gap: 3px;
+}
+
+.tab-item {
+    display: inline-block;
+    padding: 6px 12px;
+    text-decoration: none;
+    color: #0033CC;
+    font-weight: bold;
+    background-color: #F1F1F1;
+    border: 1px solid #EAEAEA;
+    border-bottom: none;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+}
+
+.tab-item:hover {
+    background-color: #E2E2E2;
+}
+
+.tab-item.id-active {
+    background-color: #FFFFFF;
+    border: 2px solid #EAEAEA;
+    border-bottom: 2px solid #FFFFFF;
+    margin-bottom: -2px;
+    color: #333333;
+}
+
+/* STRUCTURE DE LA PAGE */
+#page-container {
+    max-width: 1000px;
+    margin: 20px auto;
+    padding: 0 15px;
+    display: flex;
     gap: 15px;
 }
 
-.sidebar-tabs {
-    display: flex;
-    border: 1px solid #CCCCCC;
-    background: #EAEAEA;
-}
-
-.tab-btn {
+#left-column {
     flex: 1;
-    background: transparent;
-    border: none;
-    padding: 10px;
-    font-size: 16px;
-    color: #555;
-    cursor: pointer;
-    text-align: center;
-    transition: all 0.2s;
 }
 
-.tab-btn:not(:last-child) {
-    border-right: 1px solid #CCCCCC;
+#right-column {
+    flex: 1;
 }
 
-.tab-btn:hover {
-    background: #F9F9F9;
-}
-
-.tab-btn.active {
-    background: #FFFFFF;
-    color: #0033CC;
-    font-weight: bold;
-}
-
-.sidebar-content-box {
-    min-height: 350px;
-    background: #FFF;
-}
-
-.tab-content {
-    display: none;
-}
-
-.tab-content.active {
-    display: block;
-}
-
-.box-header {
-    background-color: #666666;
-    color: #FFFFFF;
-    padding: 6px 10px;
-    font-weight: bold;
-    font-size: 14px;
-}
-
-/* Listes d'utilisateurs */
-.user-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
+/* FAMEUSES BOITES DE SECTION RETRO */
+.section-box {
     border: 1px solid #CCCCCC;
-    border-top: none;
-    max-height: 350px;
+    background-color: #FFFFFF;
+    margin-bottom: 15px;
+}
+
+.section-box .box-title {
+    background-color: #EAEAEA;
+    padding: 5px 10px;
+    border-bottom: 1px solid #CCCCCC;
+    font-weight: bold;
+    color: #444444;
+    font-size: 13px;
+}
+
+/* Version Bleue (très populaire sur YouTube en 2006 pour les profils) */
+.section-box.blue-box {
+    border: 1px solid #B4C6E7;
+}
+
+.section-box.blue-box .box-title {
+    background-color: #D9E1F2;
+    border-bottom: 1px solid #B4C6E7;
+    color: #1F4E79;
+}
+
+.box-body {
+    padding: 10px;
+}
+
+/* LISTE DES MEMBRES STYLE REPERTOIRE */
+#users-list {
+    list-style: none;
+    max-height: 450px;
     overflow-y: auto;
 }
 
 .user-item {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 8px;
-    border-bottom: 1px solid #EEEEEE;
+    padding: 6px;
+    border-bottom: 1px dashed #EEEEEE;
     cursor: pointer;
 }
 
-.user-item:hover { background-color: #F2F5F7; }
-.user-item.active { background-color: #E2E9EF; }
+.user-item:hover {
+    background-color: #F5F5F5;
+}
+
+.user-item.active {
+    background-color: #FFF2CC; /* Surlignage jaune rétro */
+    border: 1px solid #FFE599;
+}
+
+.avatar-container {
+    position: relative;
+    margin-right: 10px;
+}
 
 .mini-avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 4px;
-    border: 1px solid #DDD;
-}
-
-.user-info { display: flex; flex-direction: column; }
-.nickname { font-weight: bold; font-size: 13px; color: #0033CC; }
-.role-tag { font-size: 11px; color: #666666; }
-
-/* Arbre de salons Discord (Groups) */
-.channels-container {
-    border: 1px solid #CCCCCC;
-    border-top: none;
-    padding: 10px;
-    max-height: 350px;
-    overflow-y: auto;
-    background: #FAFAFA;
-}
-
-.category-row {
-    font-weight: bold;
-    font-size: 11px;
-    color: #666;
-    text-transform: uppercase;
-    margin: 10px 0 5px 0;
-}
-
-.channel-click {
+    width: 36px;
+    height: 36px;
+    border: 1px solid #999999;
+    background-color: #FFF;
     display: block;
-    padding: 4px 8px;
-    color: #333;
-    text-decoration: none;
-    font-size: 13px;
-    cursor: pointer;
 }
 
-.channel-click:hover {
-    background: #EAEAEA;
-    color: #0033CC;
+/* Statuts d'époque (Vert / Gris) */
+.status-dot {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 1px solid white;
 }
+.status-dot.online { background-color: #2ecc71; }
+.status-dot.idle { background-color: #f1c40f; }
+.status-dot.dnd { background-color: #e74c3c; }
+.status-dot.offline { background-color: #95a5a6; }
 
-.channel-click.active {
-    background: #0033CC;
-    color: #FFF;
-}
-
-/* Infos Serveur Padding */
-.server-info-padding {
-    padding: 10px;
-    border: 1px solid #CCCCCC;
-    border-top: none;
-    font-size: 13px;
-}
-
-/* Module d'authentification */
-.auth-box {
-    border: 1px solid #CCCCCC;
-    background: #FAFAFA;
-    padding-bottom: 10px;
-}
-
-.auth-box input {
-    display: block;
-    width: calc(100% - 22px);
-    margin: 8px auto;
-    padding: 4px;
-    border: 1px solid #CCC;
-    font-size: 12px;
-}
-
-.auth-buttons {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-}
-
-.auth-error-msg {
-    display: block;
-    text-align: center;
-    color: red;
-    font-size: 11px;
-    margin-top: 5px;
-}
-
-#auth-logged-in {
-    padding: 10px;
-    text-align: center;
-    font-size: 13px;
-}
-
-/* Boutons d'administration */
-.admin-only-btn {
-    width: 100%;
-    background: linear-gradient(to bottom, #990000, #660000);
-    color: #FFF;
-    border: 1px solid #550000;
-    padding: 8px;
-    font-weight: bold;
-    cursor: pointer;
-    text-align: center;
-}
-
-.admin-only-btn:hover { background: #800000; }
-
-/* Contenu Principal & Système de Chat */
-.main-content {
-    flex-grow: 1;
-}
-
-.profile-box {
-    border: 1px solid #CCCCCC;
-    border-top: none;
-    padding: 20px;
-    min-height: 400px;
-    background-color: #FAFAFA;
-}
-
-.chat-container {
-    border: 1px solid #CCCCCC;
-    border-top: none;
+.user-info {
     display: flex;
     flex-direction: column;
-    height: 430px;
-    background: #FFF;
 }
 
-.chat-messages-box {
-    flex-grow: 1;
-    padding: 15px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    background: #FDFDFD;
-}
-
-.chat-line {
-    font-size: 13px;
-    line-height: 1.4;
-}
-
-.chat-tag-bot {
-    color: #555;
-    font-weight: normal;
-    font-size: 11px;
-}
-
-.chat-author {
+.nickname {
     font-weight: bold;
     color: #0033CC;
 }
 
-.chat-input-row {
-    display: flex;
-    border-top: 1px solid #CCCCCC;
-    padding: 10px;
-    background: #F4F4F4;
-    gap: 10px;
-}
-
-.chat-input-row input {
-    flex-grow: 1;
-    padding: 6px;
-    border: 1px solid #CCC;
-}
-
-/* Panel d'administration */
-.admin-box {
-    border: 1px solid #CCCCCC;
-    border-top: none;
-    padding: 20px;
-    background: #FAFAFA;
-    min-height: 400px;
-}
-
-.admin-row {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-}
-
-.admin-row input, .admin-row select {
-    padding: 5px;
-    border: 1px solid #CCC;
-}
-
-/* Badges Utilisateurs et Éléments techniques */
-.discord-role {
-    font-size: 12px;
-    font-weight: bold;
-    padding: 3px 8px;
-    border-radius: 12px;
-    border: 1px solid rgba(0,0,0,0.1);
-    display: inline-block;
-}
-
-.app-badge {
-    background-color: #5865F2;
-    color: white;
-    font-size: 9px;
-    font-weight: bold;
-    padding: 1px 4px;
-    border-radius: 3px;
-    margin-left: 5px;
-}
-
-.web-badge {
-    background: #333;
-    color: #fff;
+.role-tag {
     font-size: 10px;
-    padding: 2px 5px;
-    border-radius: 3px;
-    margin-left: 4px;
+    color: #666666;
+    margin-top: 2px;
 }
 
-.hidden { display: none !important; }
+/* FICHE PROFIL 2006 */
+.no-selection {
+    color: #777;
+    font-style: italic;
+    text-align: center;
+    padding: 40px 0;
+}
+
+.profile-header {
+    display: flex;
+    gap: 15px;
+    border-bottom: 1px solid #B4C6E7;
+    padding-bottom: 12px;
+    margin-bottom: 12px;
+}
+
+.big-avatar {
+    width: 80px;
+    height: 80px;
+    border: 2px solid #1F4E79;
+    padding: 2px;
+    background-color: white;
+}
+
+.profile-title h2 {
+    font-size: 18px;
+    color: #1F4E79;
+    margin-bottom: 3px;
+}
+
+.profile-title span {
+    color: #666;
+    font-size: 11px;
+}
+
+.info-row {
+    margin-bottom: 10px;
+    display: flex;
+    align-items: baseline;
+}
+
+.info-label {
+    width: 100px;
+    font-weight: bold;
+    color: #555;
+}
+
+/* Les badges de rôles relookés comme des "Tags/Groupes" de 2006 */
+.roles-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.discord-role {
+    font-size: 11px;
+    padding: 2px 6px;
+    border: 1px solid #999;
+    border-radius: 3px;
+    font-weight: bold;
+}
+
+/* FOOTER RÉTRO */
+#retro-footer {
+    text-align: center;
+    margin-top: 40px;
+    padding: 20px 0;
+    border-top: 1px solid #EAEAEA;
+    color: #666666;
+}
+
+#retro-footer a {
+    color: #0033CC;
+    text-decoration: none;
+}
+
+#retro-footer a:hover {
+    text-decoration: underline;
+}
+
+.copyright {
+    margin-top: 5px;
+    font-size: 11px;
+}
