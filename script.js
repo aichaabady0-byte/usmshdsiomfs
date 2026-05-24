@@ -1,6 +1,3 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-
 document.addEventListener("DOMContentLoaded", () => {
     
     const usersList = document.getElementById('users-list');
@@ -13,81 +10,70 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let allMembers = [];
     let currentLang = 'en';
-    let database;
 
-    // TA CONFIGURATION FIREBASE SECRÈTE
-// CONFIGURATION FIREBASE (À remplir avec tes vraies clés de ta console Firebase)
-    const firebaseConfig = {
-        apiKey: "AIzaSyD3l4bnRhUUXjYMkXHcQPZpfocCVZWMjOg",
-        authDomain: "usmscord.firebaseapp.com",
-        databaseURL: "https://usmscord-default-rtdb.firebaseio.com",
-        projectId: "usmscord",
-        storageBucket: "usmscord.firebasestorage.app",
-        messagingSenderId: "1035262779396",
-        appId: "1:1035262779396:web:3802738f0f998834681551"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    database = getDatabase(app);
-
-    // TRADUCTIONS DES LANGUES 2006
+    // TRADUCTIONS DES STRINGS DE L'UI (STYLE YOUTUBE 2006)
     const translations = {
         en: {
-            boxTitle: "Discord Members",
-            profileTitle: "Member Profile Card",
-            noSelection: "Select a member on the left to inspect their vintage profile card.",
-            noRole: "No group / role",
+            boxTitle: "Connected Members",
+            profileTitle: "USMS Profile Card",
+            noSelection: "Select a community member on the left to view their details.",
+            noRole: "No role",
             statusLabel: "Status:",
-            rolesLabel: "Groups/Roles:",
-            loading: "Loading members data...",
-            empty: "No members synchronized by the bot yet.",
+            rolesLabel: "Roles:",
+            loading: "Loading...",
+            error: "Failed to load community data.",
             status: { online: "Online", idle: "Idle", dnd: "Do Not Disturb", offline: "Offline" }
         },
         fr: {
-            boxTitle: "Membres Discord",
-            profileTitle: "Fiche Profil du Membre",
-            noSelection: "Sélectionne un membre à gauche pour inspecter sa fiche profil rétro.",
-            noRole: "Aucun groupe / rôle",
+            boxTitle: "Membres Connectés",
+            profileTitle: "Fiche Profil USMS",
+            noSelection: "Sélectionnez un membre de la communauté à gauche pour voir ses détails.",
+            noRole: "Aucun rôle",
             statusLabel: "Statut :",
-            rolesLabel: "Groupes/Rôles :",
-            loading: "Chargement des membres...",
-            empty: "Aucun membre synchronisé par le bot pour l'instant.",
+            rolesLabel: "Rôles :",
+            loading: "Chargement...",
+            error: "Échec du chargement des données.",
             status: { online: "En ligne", idle: "Absent", dnd: "Ne pas déranger", offline: "Hors ligne" }
         },
         zh: {
-            boxTitle: "Discord 成员列表",
-            profileTitle: "成员档案卡",
-            noSelection: "在左侧选择一个成员以查看其复古档案卡。",
-            noRole: "无身份组 / 角色",
+            boxTitle: "已连接的成员",
+            profileTitle: "USMS 档案卡",
+            noSelection: "在左侧选择一个社区成员以查看其详细信息。",
+            noRole: "无身份组",
             statusLabel: "在线状态:",
             rolesLabel: "身份组:",
-            loading: "正在加载成员数据...",
-            empty: "目前没有机器人同步的成员。",
+            loading: "正在加载...",
+            error: "无法加载成员数据。",
             status: { online: "在线", idle: "闲置", dnd: "请勿打扰", offline: "离线" }
         }
     };
 
-    // Lecture du nœud de synchronisation créé par ton bot Discord
-    function listenToDiscordMembers() {
-        if (!database) return;
-
-        const t = translations[currentLang];
-        if (usersList) usersList.innerHTML = `<li class="loading-item">${t.loading}</li>`;
-
-        onValue(ref(database, 'discordMembers'), (snapshot) => {
-            if (snapshot.exists()) {
-                allMembers = Object.values(snapshot.val());
-                renderList(allMembers);
-            } else {
-                if (usersList) usersList.innerHTML = `<li style="padding:10px;color:#888;text-align:center;">${t.empty}</li>`;
-            }
-        });
+    // Appeler l'API Serverless Node de Vercel
+    async function fetchDiscordData() {
+        try {
+            const response = await fetch('/api/members');
+            if (!response.ok) throw new Error('API Response Error');
+            
+            const data = await response.json();
+            allMembers = data.members || [];
+            renderList(allMembers);
+        } catch (error) {
+            console.error("Fetch Error:", error);
+            const t = translations[currentLang];
+            if (usersList) usersList.innerHTML = `<li style="padding:10px; color:red;">${t.error}</li>`;
+        }
     }
 
+    // Afficher la liste des membres à gauche
     function renderList(members) {
         if (!usersList) return;
         usersList.innerHTML = ""; 
         const t = translations[currentLang];
+
+        if(members.length === 0) {
+            usersList.innerHTML = `<li style="padding:10px;color:#888;">No members found</li>`;
+            return;
+        }
 
         members.forEach(member => {
             const li = document.createElement('li');
@@ -111,6 +97,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // Afficher la fiche d'un membre à droite
     function selectUser(member, element) {
         if (!detailsBox) return;
         
@@ -120,7 +107,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const t = translations[currentLang];
         
         const rolesHtml = member.roles && member.roles.length > 0 
-            ? member.roles.map(role => `<span class="discord-role" style="background-color: ${role.color === '#000000' ? '#FFFFFF' : role.color}; color: ${role.color === '#000000' ? '#333' : '#FFF'}; border-color: ${role.color === '#000000' ? '#999' : role.color};">${role.name}</span>`).join(' ')
+            ? member.roles.map(role => {
+                const color = role.color === '#000000' ? '#333333' : role.color;
+                return `<span class="discord-role" style="color: ${color}; border-color: ${color};">${role.name}</span>`;
+              }).join(' ')
             : `<span>${t.noRole}</span>`;
 
         detailsBox.innerHTML = `
@@ -142,6 +132,7 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
     }
 
+    // Changement de langues et drapeaux
     if (langSelect) {
         langSelect.addEventListener('change', (e) => {
             currentLang = e.target.value;
@@ -153,10 +144,11 @@ document.addEventListener("DOMContentLoaded", () => {
             if (boxTitleText) boxTitleText.innerText = t.boxTitle;
             if (profileTitleText) profileTitleText.innerText = t.profileTitle;
             
-            detailsBox.innerHTML = `<div class="no-selection"><i class="fa-solid fa-arrow-left" style="margin-right: 5px;"></i>${t.noSelection}</div>`;
+            detailsBox.innerHTML = `<div class="no-selection">${t.noSelection}</div>`;
             if (allMembers.length > 0) renderList(allMembers);
         });
     }
 
-    listenToDiscordMembers();
+    // Charger les membres immédiatement au chargement de la page
+    fetchDiscordData();
 });
