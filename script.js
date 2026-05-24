@@ -1,154 +1,187 @@
 document.addEventListener("DOMContentLoaded", () => {
     
-    const usersList = document.getElementById('users-list');
-    const detailsBox = document.getElementById('details-box');
+    const membersGrid = document.getElementById('members-grid');
+    const searchInput = document.getElementById('search-input');
     const langSelect = document.getElementById('lang-select');
     const currentFlag = document.getElementById('current-flag');
+    const pageTitle = document.getElementById('page-title');
     
-    const boxTitleText = document.getElementById('box-title-text');
-    const profileTitleText = document.getElementById('profile-title-text');
+    // Éléments de la modale
+    const profileModal = document.getElementById('profile-modal');
+    const modalBody = document.getElementById('modal-body');
+    const closeModalBtn = document.querySelector('.close-modal-btn');
 
     let allMembers = [];
     let currentLang = 'en';
 
-    // TRADUCTIONS DES STRINGS DE L'UI (STYLE YOUTUBE 2006)
+    // DICTIONNAIRE DES TRADUCTIONS COMPLETE
     const translations = {
         en: {
-            boxTitle: "Connected Members",
-            profileTitle: "USMS Profile Card",
-            noSelection: "Select a community member on the left to view their details.",
-            noRole: "No role",
-            statusLabel: "Status:",
-            rolesLabel: "Roles:",
-            loading: "Loading...",
-            error: "Failed to load community data.",
-            status: { online: "Online", idle: "Idle", dnd: "Do Not Disturb", offline: "Offline" }
+            title: "Server Members",
+            searchPlaceholder: "Search a member...",
+            loading: "Loading members from Discord...",
+            error: "Failed to load server members.",
+            noRole: "No Role",
+            joinDate: "Join Date",
+            nickname: "Nickname",
+            roles: "Roles",
+            username: "Username"
         },
         fr: {
-            boxTitle: "Membres Connectés",
-            profileTitle: "Fiche Profil USMS",
-            noSelection: "Sélectionnez un membre de la communauté à gauche pour voir ses détails.",
+            title: "Membres du Serveur",
+            searchPlaceholder: "Rechercher un membre...",
+            loading: "Chargement des membres depuis Discord...",
+            error: "Échec du chargement des membres.",
             noRole: "Aucun rôle",
-            statusLabel: "Statut :",
-            rolesLabel: "Rôles :",
-            loading: "Chargement...",
-            error: "Échec du chargement des données.",
-            status: { online: "En ligne", idle: "Absent", dnd: "Ne pas déranger", offline: "Hors ligne" }
+            joinDate: "Date d'arrivée",
+            nickname: "Pseudo",
+            roles: "Rôles",
+            username: "Nom d'utilisateur"
         },
         zh: {
-            boxTitle: "已连接的成员",
-            profileTitle: "USMS 档案卡",
-            noSelection: "在左侧选择一个社区成员以查看其详细信息。",
-            noRole: "无身份组",
-            statusLabel: "在线状态:",
-            rolesLabel: "身份组:",
-            loading: "正在加载...",
+            title: "服务器成员",
+            searchPlaceholder: "搜索成员...",
+            loading: "正在从 Discord 加载成员...",
             error: "无法加载成员数据。",
-            status: { online: "在线", idle: "闲置", dnd: "请勿打扰", offline: "离线" }
+            noRole: "无身份组",
+            joinDate: "加入日期",
+            nickname: "昵称",
+            roles: "身份组",
+            username: "用户名"
         }
     };
 
-    // Appeler l'API Serverless Node de Vercel
-    async function fetchDiscordData() {
+    // 1. CHARGER LES DONNÉES DE L'API VERCEL
+    async function loadMembers() {
         try {
             const response = await fetch('/api/members');
-            if (!response.ok) throw new Error('API Response Error');
-            
+            if (!response.ok) throw new Error('API Error');
             const data = await response.json();
-            allMembers = data.members || [];
-            renderList(allMembers);
+            
+            // On ajoute une fausse joinDate propre si Discord API ne la renvoie pas directement
+            allMembers = (data.members || []).map(m => ({
+                ...m,
+                joinDate: m.joinDate || new Date().toLocaleDateString(currentLang === 'fr' ? 'fr-FR' : 'en-US')
+            }));
+            
+            renderGrid(allMembers);
         } catch (error) {
-            console.error("Fetch Error:", error);
-            const t = translations[currentLang];
-            if (usersList) usersList.innerHTML = `<li style="padding:10px; color:red;">${t.error}</li>`;
+            console.error(error);
+            membersGrid.innerHTML = `<div class="loading" style="color:red;">${translations[currentLang].error}</div>`;
         }
     }
 
-    // Afficher la liste des membres à gauche
-    function renderList(members) {
-        if (!usersList) return;
-        usersList.innerHTML = ""; 
+    // 2. AFFICHER LA GRILLE DES CARTES
+    function renderGrid(membersList) {
+        membersGrid.innerHTML = "";
         const t = translations[currentLang];
 
-        if(members.length === 0) {
-            usersList.innerHTML = `<li style="padding:10px;color:#888;">No members found</li>`;
+        if (membersList.length === 0) {
+            membersGrid.innerHTML = `<div class="loading">No members found.</div>`;
             return;
         }
 
-        members.forEach(member => {
-            const li = document.createElement('li');
-            li.classList.add('user-item');
-            
-            const mainRoleName = member.roles && member.roles.length > 0 ? member.roles[0].name : t.noRole;
-            const mainRoleColor = member.roles && member.roles.length > 0 ? member.roles[0].color : "#666666";
+        membersList.forEach(member => {
+            // Identifier le plus haut rôle
+            const hasRoles = member.roles && member.roles.length > 0;
+            const topRoleName = hasRoles ? member.roles[0].name : t.noRole;
+            const topRoleColor = hasRoles ? member.roles[0].color : "#666666";
 
-            li.innerHTML = `
+            const card = document.createElement('div');
+            card.classList.add('member-card');
+            
+            card.innerHTML = `
                 <div class="avatar-container">
-                    <img class="mini-avatar" src="${member.avatar}" alt="avatar">
+                    <img class="card-avatar" src="${member.avatar}" alt="avatar">
                     <span class="status-dot ${member.status}"></span>
                 </div>
-                <div class="user-info">
-                    <span class="nickname" style="color: ${mainRoleColor === '#000000' ? '#0033CC' : mainRoleColor};">${member.nickname}</span>
-                    <span class="role-tag">${mainRoleName}</span>
+                <div class="card-name">${member.nickname}</div>
+                <div class="card-role" style="color: ${topRoleColor === '#000000' ? '#555' : topRoleColor};">
+                    ${topRoleName}
                 </div>
             `;
-            li.addEventListener('click', () => selectUser(member, li));
-            usersList.appendChild(li);
+
+            // Ouvrir la popup au clic sur la carte
+            card.addEventListener('click', () => openProfileModal(member));
+            membersGrid.appendChild(card);
         });
     }
 
-    // Afficher la fiche d'un membre à droite
-    function selectUser(member, element) {
-        if (!detailsBox) return;
-        
-        document.querySelectorAll('.user-item').forEach(item => item.classList.remove('active'));
-        element.classList.add('active');
-        
+    // 3. OUVRIR LA POPUP (MODALE) DETROUSSEE
+    function openProfileModal(member) {
         const t = translations[currentLang];
         
-        const rolesHtml = member.roles && member.roles.length > 0 
-            ? member.roles.map(role => {
-                const color = role.color === '#000000' ? '#333333' : role.color;
-                return `<span class="discord-role" style="color: ${color}; border-color: ${color};">${role.name}</span>`;
-              }).join(' ')
-            : `<span>${t.noRole}</span>`;
+        const rolesHtml = member.roles && member.roles.length > 0
+            ? member.roles.map(r => {
+                const color = r.color === '#000000' ? '#444444' : r.color;
+                return `<span class="modal-role-badge" style="color: ${color};">${r.name}</span>`;
+            }).join('')
+            : `<div>${t.noRole}</div>`;
 
-        detailsBox.innerHTML = `
-            <div class="profile-header">
-                <img class="big-avatar" src="${member.avatar}" alt="Avatar">
-                <div class="profile-title">
+        modalBody.innerHTML = `
+            <div class="modal-header">
+                <img class="modal-avatar" src="${member.avatar}" alt="avatar">
+                <div class="modal-title-info">
                     <h2>${member.nickname}</h2>
                     <span>@${member.username}</span>
                 </div>
             </div>
-            <div class="info-row">
-                <span class="info-label">${t.statusLabel}</span> 
-                <strong class="status-text">${t.status[member.status] || member.status}</strong>
+            
+            <div class="modal-row">
+                <span class="modal-label">${t.nickname}</span>
+                <div class="modal-value">${member.nickname}</div>
             </div>
-            <div class="info-row">
-                <span class="info-label">${t.rolesLabel}</span>
-                <div class="roles-container">${rolesHtml}</div>
+
+            <div class="modal-row">
+                <span class="modal-label">${t.joinDate}</span>
+                <div class="modal-value">${member.joinDate}</div>
+            </div>
+
+            <div class="modal-row">
+                <span class="modal-label">${t.roles}</span>
+                <div class="modal-roles-list">${rolesHtml}</div>
             </div>
         `;
+
+        profileModal.classList.add('open');
     }
 
-    // Changement de langues et drapeaux
-    if (langSelect) {
-        langSelect.addEventListener('change', (e) => {
-            currentLang = e.target.value;
-            
-            const flagUrls = { en: "https://flagcdn.com/16x12/us.png", fr: "https://flagcdn.com/16x12/fr.png", zh: "https://flagcdn.com/16x12/cn.png" };
-            if (currentFlag) currentFlag.src = flagUrls[currentLang];
-            
-            const t = translations[currentLang];
-            if (boxTitleText) boxTitleText.innerText = t.boxTitle;
-            if (profileTitleText) profileTitleText.innerText = t.profileTitle;
-            
-            detailsBox.innerHTML = `<div class="no-selection">${t.noSelection}</div>`;
-            if (allMembers.length > 0) renderList(allMembers);
-        });
-    }
+    // FERMER LA POPUP
+    closeModalBtn.addEventListener('click', () => profileModal.classList.remove('open'));
+    profileModal.addEventListener('click', (e) => {
+        if(e.target === profileModal) profileModal.classList.remove('open');
+    });
 
-    // Charger les membres immédiatement au chargement de la page
-    fetchDiscordData();
+    // 4. BARRE DE RECHERCHE EN TEMPS RÉEL
+    searchInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        const filtered = allMembers.filter(m => 
+            m.nickname.toLowerCase().includes(query) || 
+            m.username.toLowerCase().includes(query)
+        );
+        renderGrid(filtered);
+    });
+
+    // 5. COMMUTATEUR DE LANGUES
+    langSelect.addEventListener('change', (e) => {
+        currentLang = e.target.value;
+        
+        // Ajustement du drapeau
+        const flags = { en: "https://flagcdn.com/16x12/us.png", fr: "https://flagcdn.com/16x12/fr.png", zh: "https://flagcdn.com/16x12/cn.png" };
+        if (currentFlag) currentFlag.src = flags[currentLang];
+        
+        // Traduction de l'interface globale
+        const t = translations[currentLang];
+        pageTitle.innerText = t.title;
+        searchInput.placeholder = t.searchPlaceholder;
+        
+        // Fermer la modale si elle est ouverte pour éviter les conflits de traduction textuelle à la volée
+        profileModal.classList.remove('open');
+
+        // Ré-afficher la grille traduite
+        if (allMembers.length > 0) renderGrid(allMembers);
+    });
+
+    // Initialisation
+    loadMembers();
 });
