@@ -3,84 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>USMS CORD - Broadcast Yourself™</title>
+    <title>USMS CORD - Members</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
-    <!-- UTILITY TOP BAR -->
-    <div id="util-bar">
-        <div class="util-left">
-            <span id="tagline">Broadcast Yourself™</span>
+    <!-- BARRE SUPÉRIEURE -->
+    <header id="top-bar">
+        <div class="logo-usms">USMS <span class="logo-box">CORD</span></div>
+        
+        <div class="search-container">
+            <input type="text" id="search-input" placeholder="Search a member...">
         </div>
-        <div class="util-right">
+
+        <div class="lang-container">
             <label for="lang-select">Language:</label>
+            <img id="current-flag" src="https://flagcdn.com/16x12/us.png" alt="flag">
             <select id="lang-select">
                 <option value="en" selected>English</option>
                 <option value="fr">Français</option>
                 <option value="zh">中文</option>
             </select>
-            <img id="current-flag" src="https://flagcdn.com/16x12/us.png" alt="flag">
         </div>
-    </div>
-
-    <!-- MAIN RETRO HEADER -->
-    <header id="main-header">
-        <div class="logo-container">
-            <!-- Boîte BLEUE rétro pour CORD -->
-            <div class="logo-usms">USMS <span class="logo-box">CORD</span></div>
-        </div>
-        
-        <!-- Onglets originaux 2006 -->
-        <nav id="nav-tabs">
-            <a href="#" class="tab-item">Home</a>
-            <a href="#" class="tab-item">Videos</a>
-            <a href="#" class="tab-item id-active">Channels & Members</a>
-            <a href="#" class="tab-item">Community</a>
-        </nav>
     </header>
 
-    <!-- CONTENT WRAPPER -->
-    <div id="page-container">
-        
-        <!-- COLONNE GAUCHE : LISTE -->
-        <div id="left-column">
-            <div class="section-box">
-                <div class="box-title">
-                    <span id="box-title-text">Connected Members</span>
-                </div>
-                <div class="box-body">
-                    <ul id="users-list">
-                        <li class="loading-item">Loading...</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-
-        <!-- COLONNE DROITE : FICHE PROFIL -->
-        <div id="right-column">
-            <div class="section-box blue-box">
-                <div class="box-title">
-                    <span id="profile-title-text">USMS Profile Card</span>
-                </div>
-                <div class="box-body" id="details-box">
-                    <div class="no-selection">
-                        Select a community member on the left to view their details.
-                    </div>
-                </div>
-            </div>
-        </div>
-
+    <!-- SECTION TITRE PRINCIPALE -->
+    <div class="main-title-bar">
+        <h1 id="page-title">Server Members</h1>
     </div>
 
-    <!-- VINTAGE FOOTER -->
-    <footer id="retro-footer">
-        <div>
-            <a href="#">About Us</a> | <a href="#">Terms of Use</a> | <a href="#">Privacy Policy</a> | <a href="#">Help</a>
+    <!-- GRILLE DE TOUS LES MEMBRES -->
+    <div id="members-grid">
+        <div class="loading" id="loading-text">Loading members...</div>
+    </div>
+
+    <!-- FENÊTRE POPUP (MODALE) POUR LES DÉTAILS AU CLIC -->
+    <div id="profile-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="close-modal-btn">&times;</button>
+            <div id="modal-body">
+                <!-- Rempli dynamiquement en JS -->
+            </div>
         </div>
-        <div class="copyright">Copyright © 2006 USMS CORD, LLC</div>
-    </footer>
+    </div>
 
     <script src="script.js"></script>
 </body>
