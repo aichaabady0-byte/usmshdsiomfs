@@ -78,7 +78,12 @@ document.addEventListener("DOMContentLoaded", () => {
         membersList.forEach(member => {
             const hasRoles = member.roles && member.roles.length > 0;
             const topRoleName = hasRoles ? member.roles[0].name : t.noRole;
-            const topRoleColor = hasRoles ? member.roles[0].color : "#666666";
+            let topRoleColor = hasRoles ? member.roles[0].color : "#666666";
+
+            // SÉCURITÉ CONTRASTE : Si la couleur du rôle est blanche ou noire par défaut, on applique du gris ou du noir
+            if (topRoleColor.toLowerCase() === '#ffffff' || topRoleColor.toLowerCase() === '#000000') {
+                topRoleColor = '#000000';
+            }
 
             const card = document.createElement('div');
             card.classList.add('member-card');
@@ -88,12 +93,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     <img class="card-avatar" src="${member.avatar}" alt="avatar">
                 </div>
                 <div class="card-name">${member.nickname}</div>
-                <div class="card-role" style="color: ${topRoleColor === '#000000' ? '#666' : topRoleColor};">
+                <div class="card-role" style="color: ${topRoleColor};">
                     ${topRoleName}
                 </div>
             `;
 
-            // Remplacement : au clic, on remplit le panneau du bas
             card.addEventListener('click', () => showVintageProfile(member));
             membersGrid.appendChild(card);
         });
@@ -111,7 +115,11 @@ document.addEventListener("DOMContentLoaded", () => {
         
         const rolesHtml = member.roles && member.roles.length > 0
             ? member.roles.map(r => {
-                const color = r.color === '#000000' ? '#666' : r.color;
+                let color = r.color;
+                // SÉCURITÉ CONTRASTE : Idem pour les badges de la fiche d'inspection
+                if (color.toLowerCase() === '#ffffff' || color.toLowerCase() === '#000000') {
+                    color = '#000000';
+                }
                 return `<span class="modal-role-badge" style="color: ${color}; border-color: ${color};">${r.name}</span>`;
             }).join('')
             : `<div>${t.noRole}</div>`;
@@ -141,7 +149,6 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
         `;
 
-        // Afficher la boîte d'inspection d'époque
         profileDetailZone.style.display = "block";
         profileDetailZone.scrollIntoView({ behavior: 'smooth' });
     }
