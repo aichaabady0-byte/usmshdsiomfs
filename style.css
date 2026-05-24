@@ -38,7 +38,7 @@ body {
     border: 1px solid #999;
 }
 
-/* HEADER ET LOGO BLEU */
+/* HEADER ET AJUSTEMENT LOGO IMAGE */
 #main-header {
     padding: 15px 20px;
     display: flex;
@@ -48,37 +48,27 @@ body {
     margin: 0 auto;
 }
 
-.logo-usms {
-    font-size: 26px;
-    font-weight: bold;
-    font-family: "Arial Black", Gadget, sans-serif;
-    letter-spacing: -1px;
-    color: #000;
+#site-logo {
+    height: 42px; /* Taille optimale style logo d'époque */
+    display: block;
+    object-fit: contain;
 }
 
-.logo-box {
-    font-size: 24px;
-    background-color: #0055ff;
-    color: #FFFFFF;
-    padding: 2px 6px;
-    border-radius: 4px;
-}
-
-/* BARRE DE RECHERCHE 2006 */
+/* BARRE DE RECHERCHE */
 .search-container input {
     width: 220px;
     padding: 3px;
     border: 1px solid #7F9DB9;
 }
 
-/* CONTAINER COMPACT */
+/* CONTAINER */
 #page-container {
     max-width: 1000px;
     margin: 10px auto;
     padding: 0 20px;
 }
 
-/* BOITE DE SECTION ANCIENNE (Bordures grises épaisses) */
+/* BOXES */
 .section-box {
     border: 1px solid #CCCCCC;
     background-color: #FFFFFF;
@@ -86,7 +76,6 @@ body {
 }
 
 .section-box .box-title {
-    background-color: #D5AE2D; /* Couleur dorée/jaune typique des rubriques YouTube 2006 */
     background: linear-gradient(to bottom, #EAEAEA 0%, #CCCCCC 100%);
     padding: 5px 10px;
     border-bottom: 1px solid #CCCCCC;
@@ -99,7 +88,7 @@ body {
     padding: 15px;
 }
 
-/* GRILLE DE CHAÎNES / MEMBRES STYLE REPERTOIRE */
+/* MEMBERS GRID */
 #members-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -113,7 +102,7 @@ body {
     padding: 20px 0;
 }
 
-/* LES PETITES CARTES DE CHAINES (VINTAGE) */
+/* CARDS */
 .member-card {
     text-align: center;
     padding: 10px 5px;
@@ -122,7 +111,7 @@ body {
 }
 
 .member-card:hover {
-    background-color: #FFEFA6; /* Surlignage jaune clair au survol d'époque */
+    background-color: #FFEFA6;
     border: 1px dashed #D5AE2D;
 }
 
@@ -144,7 +133,7 @@ body {
 
 .card-name {
     font-weight: bold;
-    color: #0033CC; /* Le vrai bleu lien hypertexte */
+    color: #0033CC;
     text-decoration: underline;
     margin-bottom: 2px;
     white-space: nowrap;
@@ -157,7 +146,7 @@ body {
     color: #666666;
 }
 
-/* FENÊTRE DE INSPECTION BLEUE EN BAS */
+/* DETAIL PANEL */
 .section-box.blue-box {
     border: 1px solid #B4C6E7;
 }
@@ -176,7 +165,6 @@ body {
     background-color: #F8FAFC;
 }
 
-/* DESIGN INTERNE DE LA FICHE PROFIL PROPRE */
 .profile-header {
     display: flex;
     gap: 15px;
@@ -224,7 +212,7 @@ body {
     background-color: #FFF;
 }
 
-/* FOOTER RÉTRO */
+/* FOOTER */
 #retro-footer {
     text-align: center;
     margin-top: 40px;
