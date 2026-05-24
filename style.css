@@ -1,4 +1,3 @@
-/* RESET ET POLICES RETRO (Arial / Verdana) */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -12,7 +11,7 @@ body {
     color: #333333;
 }
 
-/* UTILITY BAR (Tout en haut) */
+/* UTILITY BAR */
 #util-bar {
     background-color: #EAEAEA;
     border-bottom: 1px solid #CCCCCC;
@@ -34,15 +33,11 @@ body {
     gap: 5px;
 }
 
-#lang-select {
-    padding: 1px;
-}
-
 #current-flag {
     border: 1px solid #999;
 }
 
-/* MAIN HEADER & LOGO */
+/* MAIN HEADER & LOGO BLEU */
 #main-header {
     padding: 15px 20px 0 20px;
 }
@@ -55,16 +50,17 @@ body {
     color: #000;
 }
 
+/* LA BOÎTE BLEUE DE USMS CORD */
 .logo-box {
-    font-size: 28px;
-    background-color: #E64C3C; /* Rouge/Orange YouTube */
+    font-size: 26px;
+    background-color: #0055ff; /* Bleu rétro USMS */
     color: #FFFFFF;
-    padding: 1px 5px;
+    padding: 2px 6px;
     border-radius: 5px;
-    margin-left: 2px;
+    margin-left: 1px;
 }
 
-/* NAV TABS (Design YouTube 2006) */
+/* NAV TABS 2006 */
 #nav-tabs {
     margin-top: 15px;
     border-bottom: 2px solid #EAEAEA;
@@ -97,7 +93,7 @@ body {
     color: #333333;
 }
 
-/* STRUCTURE DE LA PAGE */
+/* STRUCTURE */
 #page-container {
     max-width: 1000px;
     margin: 20px auto;
@@ -106,15 +102,11 @@ body {
     gap: 15px;
 }
 
-#left-column {
+#left-column, #right-column {
     flex: 1;
 }
 
-#right-column {
-    flex: 1;
-}
-
-/* FAMEUSES BOITES DE SECTION RETRO */
+/* BOITES DE SECTION */
 .section-box {
     border: 1px solid #CCCCCC;
     background-color: #FFFFFF;
@@ -130,7 +122,7 @@ body {
     font-size: 13px;
 }
 
-/* Version Bleue (très populaire sur YouTube en 2006 pour les profils) */
+/* Theme Bleu */
 .section-box.blue-box {
     border: 1px solid #B4C6E7;
 }
@@ -145,7 +137,7 @@ body {
     padding: 10px;
 }
 
-/* LISTE DES MEMBRES STYLE REPERTOIRE */
+/* LISTE DE MEMBRES */
 #users-list {
     list-style: none;
     max-height: 450px;
@@ -155,7 +147,7 @@ body {
 .user-item {
     display: flex;
     align-items: center;
-    padding: 6px;
+    padding: 8px 6px;
     border-bottom: 1px dashed #EEEEEE;
     cursor: pointer;
 }
@@ -165,8 +157,8 @@ body {
 }
 
 .user-item.active {
-    background-color: #FFF2CC; /* Surlignage jaune rétro */
-    border: 1px solid #FFE599;
+    background-color: #E8F0FE; /* Surlignage bleu clair rétro */
+    border: 1px solid #B4C6E7;
 }
 
 .avatar-container {
@@ -175,20 +167,20 @@ body {
 }
 
 .mini-avatar {
-    width: 36px;
-    height: 36px;
+    width: 38px;
+    height: 38px;
     border: 1px solid #999999;
     background-color: #FFF;
     display: block;
 }
 
-/* Statuts d'époque (Vert / Gris) */
+/* Statuts Discord */
 .status-dot {
     position: absolute;
-    bottom: -2px;
-    right: -2px;
-    width: 10px;
-    height: 10px;
+    bottom: -1px;
+    right: -1px;
+    width: 9px;
+    height: 9px;
     border-radius: 50%;
     border: 1px solid white;
 }
@@ -205,20 +197,21 @@ body {
 .nickname {
     font-weight: bold;
     color: #0033CC;
+    font-size: 13px;
 }
 
 .role-tag {
-    font-size: 10px;
+    font-size: 11px;
     color: #666666;
-    margin-top: 2px;
+    margin-top: 1px;
 }
 
-/* FICHE PROFIL 2006 */
+/* PROFILE CARD */
 .no-selection {
     color: #777;
     font-style: italic;
     text-align: center;
-    padding: 40px 0;
+    padding: 50px 0;
 }
 
 .profile-header {
@@ -255,12 +248,11 @@ body {
 }
 
 .info-label {
-    width: 100px;
+    width: 110px;
     font-weight: bold;
     color: #555;
 }
 
-/* Les badges de rôles relookés comme des "Tags/Groupes" de 2006 */
 .roles-container {
     display: flex;
     flex-wrap: wrap;
@@ -275,7 +267,7 @@ body {
     font-weight: bold;
 }
 
-/* FOOTER RÉTRO */
+/* FOOTER */
 #retro-footer {
     text-align: center;
     margin-top: 40px;
