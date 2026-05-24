@@ -3,29 +3,53 @@
     margin: 0;
     padding: 0;
     font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
 }
 
 body {
-    background-color: #F6F6F6;
+    background-color: #FFFFFF;
     color: #333333;
-    padding: 20px;
+    padding: 0;
 }
 
-/* BARRE SUPÉRIEURE */
-#top-bar {
+/* UTILITY BAR */
+#util-bar {
+    background-color: #EAEAEA;
+    border-bottom: 1px solid #CCCCCC;
+    padding: 4px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-bottom: 15px;
-    border-bottom: 2px solid #EAEAEA;
-    background-color: #FFFFFF;
+}
+
+#tagline {
+    font-style: italic;
+    color: #666666;
+    font-weight: bold;
+}
+
+.util-right {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+#current-flag {
+    border: 1px solid #999;
+}
+
+/* HEADER ET LOGO BLEU */
+#main-header {
     padding: 15px 20px;
-    border-radius: 6px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1000px;
+    margin: 0 auto;
 }
 
 .logo-usms {
-    font-size: 22px;
+    font-size: 26px;
     font-weight: bold;
     font-family: "Arial Black", Gadget, sans-serif;
     letter-spacing: -1px;
@@ -33,240 +57,192 @@ body {
 }
 
 .logo-box {
-    font-size: 20px;
+    font-size: 24px;
     background-color: #0055ff;
     color: #FFFFFF;
-    padding: 1px 5px;
+    padding: 2px 6px;
     border-radius: 4px;
 }
 
+/* BARRE DE RECHERCHE 2006 */
 .search-container input {
-    width: 300px;
-    padding: 6px 12px;
-    border: 1px solid #CCCCCC;
-    border-radius: 4px;
-    font-size: 13px;
-}
-
-.lang-container {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 13px;
-}
-
-#current-flag {
-    border: 1px solid #999;
-}
-
-#lang-select {
+    width: 220px;
     padding: 3px;
-    font-size: 12px;
+    border: 1px solid #7F9DB9;
 }
 
-/* BARRE TITRE DE LA PAGE */
-.main-title-bar {
-    margin: 25px 0 15px 0;
+/* CONTAINER COMPACT */
+#page-container {
+    max-width: 1000px;
+    margin: 10px auto;
+    padding: 0 20px;
 }
 
-#page-title {
-    font-size: 18px;
-    color: #444444;
+/* BOITE DE SECTION ANCIENNE (Bordures grises épaisses) */
+.section-box {
+    border: 1px solid #CCCCCC;
+    background-color: #FFFFFF;
+    margin-bottom: 20px;
+}
+
+.section-box .box-title {
+    background-color: #D5AE2D; /* Couleur dorée/jaune typique des rubriques YouTube 2006 */
+    background: linear-gradient(to bottom, #EAEAEA 0%, #CCCCCC 100%);
+    padding: 5px 10px;
+    border-bottom: 1px solid #CCCCCC;
     font-weight: bold;
-    border-left: 4px solid #0055ff;
-    padding-left: 10px;
+    color: #333333;
+    font-size: 13px;
 }
 
-/* GRILLE DES CARTES MEMBRES */
+.box-body {
+    padding: 15px;
+}
+
+/* GRILLE DE CHAÎNES / MEMBRES STYLE REPERTOIRE */
 #members-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 16px;
-    margin-top: 10px;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 15px;
 }
 
 .loading {
-    grid-column: 1 / -1;
     text-align: center;
-    font-size: 14px;
     color: #666;
-    padding: 4px 0;
+    font-style: italic;
+    padding: 20px 0;
 }
 
-/* LA CARTE MEMBRE INDIVIDUELLE */
+/* LES PETITES CARTES DE CHAINES (VINTAGE) */
 .member-card {
-    background-color: #FFFFFF;
-    border: 1px solid #E0E0E0;
-    border-radius: 6px;
-    padding: 15px;
     text-align: center;
+    padding: 10px 5px;
     cursor: pointer;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+    border: 1px dashed transparent;
 }
 
 .member-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-    border-color: #0055ff;
+    background-color: #FFEFA6; /* Surlignage jaune clair au survol d'époque */
+    border: 1px dashed #D5AE2D;
 }
 
 .avatar-container {
     position: relative;
-    width: 72px;
-    height: 72px;
-    margin: 0 auto 12px auto;
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 6px auto;
 }
 
 .card-avatar {
-    width: 72px;
-    height: 72px;
-    border-radius: 50%;
-    border: 2px solid #EEEEEE;
+    width: 64px;
+    height: 64px;
+    border: 1px solid #999999;
+    padding: 2px;
+    background-color: #FFFFFF;
     object-fit: cover;
 }
 
-/* Pastille de statut Discord */
-.status-dot {
-    position: absolute;
-    bottom: 2px;
-    right: 2px;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    border: 2px solid #FFFFFF;
-}
-.status-dot.online { background-color: #2ecc71; }
-.status-dot.idle { background-color: #f1c40f; }
-.status-dot.dnd { background-color: #e74c3c; }
-.status-dot.offline { background-color: #95a5a6; }
-
 .card-name {
-    font-size: 14px;
     font-weight: bold;
-    color: #222222;
-    margin-bottom: 4px;
+    color: #0033CC; /* Le vrai bleu lien hypertexte */
+    text-decoration: underline;
+    margin-bottom: 2px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 .card-role {
-    font-size: 11px;
+    font-size: 10px;
     color: #666666;
-    font-weight: 500;
-    background-color: #F0F2F5;
-    padding: 2px 6px;
-    border-radius: 12px;
-    display: inline-block;
-    max-width: 100%;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
-/* FENÊTRE MODALE (POPUP) DÉTAILS */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.4);
+/* FENÊTRE DE INSPECTION BLEUE EN BAS */
+.section-box.blue-box {
+    border: 1px solid #B4C6E7;
+}
+
+.box-title-blue {
+    background-color: #D9E1F2;
+    padding: 6px 10px;
+    border-bottom: 1px solid #B4C6E7;
+    font-weight: bold;
+    color: #1F4E79;
+    font-size: 13px;
+}
+
+.box-body-blue {
+    padding: 15px;
+    background-color: #F8FAFC;
+}
+
+/* DESIGN INTERNE DE LA FICHE PROFIL PROPRE */
+.profile-header {
     display: flex;
-    justify-content: center;
-    align-items: center;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s ease;
-    z-index: 999;
-}
-
-.modal-overlay.open {
-    opacity: 1;
-    pointer-events: auto;
-}
-
-.modal-content {
-    background-color: #FFFFFF;
-    width: 360px;
-    border-radius: 8px;
-    padding: 20px;
-    position: relative;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-}
-
-.close-modal-btn {
-    position: absolute;
-    top: 10px;
-    right: 12px;
-    background: none;
-    border: none;
-    font-size: 22px;
-    cursor: pointer;
-    color: #999;
-}
-
-.close-modal-btn:hover {
-    color: #333;
-}
-
-/* CONTENU DE LA MODALE */
-.modal-header {
-    display: flex;
-    align-items: center;
     gap: 15px;
-    border-bottom: 1px solid #EEEEEE;
-    padding-bottom: 15px;
-    margin-bottom: 15px;
+    border-bottom: 1px dashed #CCCCCC;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
 }
 
 .modal-avatar {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    border: 1px solid #DDD;
+    width: 48px;
+    height: 48px;
+    border: 1px solid #999;
 }
 
 .modal-title-info h2 {
-    font-size: 16px;
-    color: #111;
-}
-
-.modal-title-info span {
-    font-size: 12px;
-    color: #666;
+    font-size: 14px;
+    color: #000;
 }
 
 .modal-row {
-    margin-bottom: 12px;
+    margin-bottom: 6px;
+    display: flex;
 }
 
 .modal-label {
-    font-size: 11px;
+    width: 120px;
     font-weight: bold;
-    color: #888888;
-    text-transform: uppercase;
-    display: block;
-    margin-bottom: 3px;
+    color: #666666;
 }
 
 .modal-value {
-    font-size: 13px;
-    color: #333;
+    color: #333333;
 }
 
 .modal-roles-list {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px;
-    margin-top: 4px;
+    gap: 5px;
 }
 
 .modal-role-badge {
     font-size: 10px;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-weight: bold;
-    border: 1px solid currentColor;
+    padding: 1px 4px;
+    border: 1px solid #999;
+    background-color: #FFF;
+}
+
+/* FOOTER RÉTRO */
+#retro-footer {
+    text-align: center;
+    margin-top: 40px;
+    padding: 20px 0;
+    border-top: 1px solid #EAEAEA;
+    color: #666666;
+}
+
+#retro-footer a {
+    color: #0033CC;
+    text-decoration: none;
+}
+
+#retro-footer a:hover {
+    text-decoration: underline;
+}
+
+.copyright {
+    margin-top: 5px;
+    font-size: 11px;
 }
