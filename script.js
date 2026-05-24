@@ -4,7 +4,6 @@ import { getDatabase, ref, set, get, child, push, onValue } from "https://www.gs
 
 document.addEventListener("DOMContentLoaded", () => {
     
-    // Éléments HTML de l'interface
     const usersList = document.getElementById('users-list');
     const detailsBox = document.getElementById('details-box');
     const langSelect = document.getElementById('lang-select');
@@ -27,7 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
     
     let auth, database;
 
-    // CONFIGURATION FIREBASE (À remplir avec tes vraies clés de ta console Firebase)
+   // CONFIGURATION FIREBASE (À remplir avec tes vraies clés de ta console Firebase)
     const firebaseConfig = {
         apiKey: "AIzaSyD3l4bnRhUUXjYMkXHcQPZpfocCVZWMjOg",
         authDomain: "usmscord.firebaseapp.com",
@@ -38,18 +37,16 @@ document.addEventListener("DOMContentLoaded", () => {
         appId: "1:1035262779396:web:3802738f0f998834681551"
     };
 
-    // Initialisation immédiate de Firebase
     const app = initializeApp(firebaseConfig);
     auth = getAuth(app);
     database = getDatabase(app);
 
-    // Système d'onglets (Sidebar Gauche)
+    // Sidebar Onglets
     const tabButtons = document.querySelectorAll('.tab-btn');
     tabButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             tabButtons.forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            
             btn.classList.add('active');
             document.getElementById(btn.getAttribute('data-target')).classList.add('active');
         });
@@ -72,37 +69,32 @@ document.addEventListener("DOMContentLoaded", () => {
         zh: { tagline: "Broadcast Yourself™", loading: "正在加载...", noRole: "无身份组", status: { online: "在线", idle: "闲置", dnd: "请勿打扰", offline: "离线" } }
     };
 
-    // Écoute des données Firebase en temps réel (Salons + Membres)
     function listenToGlobalData() {
         if (!database) return;
 
-        // 1. Charger les salons textuels synchronisés par ton bot
-        onValue(ref(database, 'channels'), (snapshot) => {
+        // 1. Infos du Serveur (Titre de l'application dynamique)
+        onValue(ref(database, 'serverInfo'), (snapshot) => {
             if (snapshot.exists()) {
-                renderChannels(Object.values(snapshot.val()));
-            } else {
-                // Salons de secours si le bot n'a encore rien envoyé
-                renderChannels([
-                    { id: "cat-1", name: "TEXT CHANNELS", type: 4, position: 1 },
-                    { id: "general", name: "general", type: 0, parentId: "cat-1", position: 2 }
-                ]);
+                const info = snapshot.val();
+                const titleEl = document.querySelector('.logo-area h1') || document.querySelector('header h1');
+                if (titleEl) titleEl.innerText = `${info.name} (${info.memberCount} membres)`;
             }
         });
 
-        // 2. Charger les membres du site
-        onValue(ref(database, 'users'), (snapshot) => {
+        // 2. Charger les Salons Discord
+        onValue(ref(database, 'channels'), (snapshot) => {
             if (snapshot.exists()) {
-                allMembers = Object.values(snapshot.val()).map(u => ({
-                    id: u.uid,
-                    username: u.username,
-                    nickname: u.username,
-                    avatar: "https://discord.com/assets/c09a43a372ba40e85774.png",
-                    status: "online",
-                    roles: u.badges ? u.badges.map(b => ({ name: b, color: b === "Admin" ? "red" : "#0099e5" })) : []
-                }));
+                renderChannels(Object.values(snapshot.val()));
+            }
+        });
+
+        // 3. NOUVEAU : Charger les VRAIS membres Discord envoyés par le bot
+        onValue(ref(database, 'discordMembers'), (snapshot) => {
+            if (snapshot.exists()) {
+                allMembers = Object.values(snapshot.val());
                 renderList(allMembers);
             } else {
-                if (usersList) usersList.innerHTML = `<li style="padding:10px;color:#888;">Aucun membre inscrit</li>`;
+                if (usersList) usersList.innerHTML = `<li style="padding:10px;color:#888;">En attente de la synchro du bot...</li>`;
             }
         });
     }
@@ -144,12 +136,16 @@ document.addEventListener("DOMContentLoaded", () => {
         members.forEach(member => {
             const li = document.createElement('li');
             li.classList.add('user-item');
-            const mainRoleName = member.roles.length > 0 ? member.roles[0].name : translations[currentLang].noRole;
+            const mainRoleName = member.roles && member.roles.length > 0 ? member.roles[0].name : translations[currentLang].noRole;
+            const mainRoleColor = member.roles && member.roles.length > 0 ? member.roles[0].color : "#888";
 
             li.innerHTML = `
-                <img class="mini-avatar" src="${member.avatar}" alt="avatar">
+                <div class="avatar-container">
+                    <img class="mini-avatar" src="${member.avatar}" alt="avatar">
+                    <span class="status-dot ${member.status}"></span>
+                </div>
                 <div class="user-info">
-                    <span class="nickname">${member.nickname}</span>
+                    <span class="nickname" style="color: ${mainRoleColor === '#000000' ? '#fff' : mainRoleColor};">${member.nickname}</span>
                     <span class="role-tag">${mainRoleName}</span>
                 </div>
             `;
@@ -163,19 +159,21 @@ document.addEventListener("DOMContentLoaded", () => {
         document.querySelectorAll('.user-item').forEach(item => item.classList.remove('active'));
         element.classList.add('active');
         const t = translations[currentLang];
-        const rolesHtml = member.roles.map(role => `<span class="discord-role" style="background-color: ${role.color || '#0099e5'}; color: #fff;">${role.name}</span>`).join(' ');
+        
+        const rolesHtml = member.roles && member.roles.length > 0 
+            ? member.roles.map(role => `<span class="discord-role" style="background-color: ${role.color === '#000000' ? '#5865F2' : role.color}; color: #fff;">${role.name}</span>`).join(' ')
+            : `<span>${t.noRole}</span>`;
 
         detailsBox.innerHTML = `
             <div class="profile-header">
                 <img class="big-avatar" src="${member.avatar}" alt="Avatar">
                 <div class="profile-title"><h2>${member.nickname}</h2><span>@${member.username}</span></div>
             </div>
-            <div class="info-row"><span class="info-label">Status:</span> <strong>${t.status[member.status] || member.status}</strong></div>
-            <div class="info-row"><span class="info-label">Roles:</span><div class="roles-container">${rolesHtml || `<span>${t.noRole}</span>`}</div></div>
+            <div class="info-row"><span class="info-label">Statut Discord:</span> <strong class="status-text ${member.status}">${t.status[member.status] || member.status}</strong></div>
+            <div class="info-row"><span class="info-label">Rôles Discord:</span><div class="roles-container">${rolesHtml}</div></div>
         `;
     }
 
-    // Gestion de l'affichage et de la réception des messages du Tchat
     function listenToChannelMessages(channelId) {
         if (!chatMessages) return;
         onValue(ref(database, `messages/${channelId}`), (snapshot) => {
@@ -184,13 +182,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 Object.values(snapshot.val()).forEach(msg => {
                     const line = document.createElement('div');
                     line.classList.add('chat-line');
-                    let badgeCode = "";
-                    if (msg.author.toLowerCase() === "fufu") {
-                        badgeCode = ` <i class="fa-solid fa-circle-check" style="color:#0099e5;"></i><span class="web-badge" style="background:red;color:white;padding:2px 4px;font-size:10px;border-radius:3px;margin-left:4px;">Admin</span>`;
-                    } else if (msg.badges) {
-                        msg.badges.forEach(b => { badgeCode += ` <span class="web-badge" style="background:#0099e5;color:white;padding:2px 4px;font-size:10px;border-radius:3px;margin-left:4px;">${b}</span>`; });
-                    }
-                    line.innerHTML = `<span class="chat-tag-bot">[WEB]</span> <span class="chat-author" style="font-weight:bold;">${msg.author}</span>${badgeCode}: <span>${msg.text}</span>`;
+                    line.innerHTML = `<span class="chat-tag-bot">[WEB]</span> <span class="chat-author" style="font-weight:bold;">${msg.author}</span>: <span>${msg.text}</span>`;
                     chatMessages.appendChild(line);
                 });
                 chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -206,13 +198,12 @@ document.addEventListener("DOMContentLoaded", () => {
         await push(ref(database, `messages/${activeChannelId}`), {
             author: currentUserData.username,
             text: chatInputText.value.trim(),
-            timestamp: Date.now(),
-            badges: currentUserData.badges || []
+            timestamp: Date.now()
         });
         chatInputText.value = "";
     }
 
-    // Système d'authentification (Connexion / Inscription)
+    // Auth 
     const btnRegister = document.getElementById('btn-register');
     const btnLogin = document.getElementById('btn-login');
     const btnLogout = document.getElementById('btn-logout');
@@ -223,18 +214,10 @@ document.addEventListener("DOMContentLoaded", () => {
             const user = document.getElementById('auth-username').value.trim();
             const pass = document.getElementById('auth-password').value.trim();
             if(!user || !pass) return;
-
-            const userCheck = await get(child(ref(database), `users/${user.toLowerCase()}`));
-            if (userCheck.exists()) { if (authError) authError.innerText = "Username already taken."; return; }
-
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, `${user.toLowerCase()}@usmscord.retro`, pass);
-                const isFufu = user.toLowerCase() === "fufu";
-                await set(ref(database, `users/${user.toLowerCase()}`), {
-                    username: user, uid: userCredential.user.uid, isAdmin: isFufu, badges: isFufu ? ["Admin"] : []
-                });
-                if (authError) authError.innerText = "";
-            } catch (err) { if (authError) authError.innerText = "Error during registration."; }
+                await set(ref(database, `users/${user.toLowerCase()}`), { username: user, uid: userCredential.user.uid });
+            } catch (err) { if (authError) authError.innerText = "Erreur inscription."; }
         });
     }
 
@@ -243,10 +226,8 @@ document.addEventListener("DOMContentLoaded", () => {
             const user = document.getElementById('auth-username').value.trim();
             const pass = document.getElementById('auth-password').value.trim();
             if(!user || !pass) return;
-            try {
-                await signInWithEmailAndPassword(auth, `${user.toLowerCase()}@usmscord.retro`, pass);
-                if (authError) authError.innerText = "";
-            } catch (err) { if (authError) authError.innerText = "Invalid credentials."; }
+            try { await signInWithEmailAndPassword(auth, `${user.toLowerCase()}@usmscord.retro`, pass); }
+            catch (err) { if (authError) authError.innerText = "Identifiants invalides."; }
         });
     }
 
@@ -257,7 +238,6 @@ document.addEventListener("DOMContentLoaded", () => {
             const loggedOutDiv = document.getElementById('auth-logged-out');
             const loggedInDiv = document.getElementById('auth-logged-in');
             const userDisplay = document.getElementById('current-user-display');
-            const badgeSpan = document.getElementById('user-verified-badge');
 
             if (user) {
                 const snap = await get(child(ref(database), `users/${user.email.split('@')[0]}`));
@@ -266,16 +246,13 @@ document.addEventListener("DOMContentLoaded", () => {
                     if (loggedOutDiv) loggedOutDiv.classList.add('hidden');
                     if (loggedInDiv) loggedInDiv.classList.remove('hidden');
                     if (userDisplay) userDisplay.innerText = currentUserData.username;
-                    if (badgeSpan) badgeSpan.innerHTML = currentUserData.username.toLowerCase() === 'fufu' ? ` <i class="fa-solid fa-circle-check" style="color:#0099e5;"></i>` : "";
                     if (chatInputText) chatInputText.disabled = false;
                     if (btnSendMessage) btnSendMessage.disabled = false;
-                    if (currentUserData.isAdmin && btnConfigWebsite) btnConfigWebsite.classList.remove('hidden');
                 }
             } else {
                 currentUserData = null;
                 if (loggedOutDiv) loggedOutDiv.classList.remove('hidden');
                 if (loggedInDiv) loggedInDiv.classList.add('hidden');
-                if (btnConfigWebsite) btnConfigWebsite.classList.add('hidden');
                 if (chatInputText) chatInputText.disabled = true;
                 if (btnSendMessage) btnSendMessage.disabled = true;
                 switchView(viewProfile);
@@ -283,33 +260,13 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Gestion du panel Admin (Attribution de Badges)
-    const btnGiveBadge = document.getElementById('btn-give-badge');
-    if (btnGiveBadge) {
-        btnGiveBadge.addEventListener('click', async () => {
-            const targetUser = document.getElementById('badge-target-user').value.trim().toLowerCase();
-            const badge = document.getElementById('badge-name').value.trim();
-            const snap = await get(child(ref(database), `users/${targetUser}`));
-            if(snap.exists()){
-                const u = snap.val();
-                if(!u.badges) u.badges = [];
-                u.badges.push(badge);
-                await set(ref(database, `users/${targetUser}`), u);
-                alert("Badge attribué avec succès !");
-            }
-        });
-    }
-
     if (langSelect) {
         langSelect.addEventListener('change', (e) => {
             currentLang = e.target.value;
-            const flagUrls = { en: "https://flagcdn.com/16x12/us.png", fr: "https://flagcdn.com/16x12/fr.png", zh: "https://flagcdn.com/16x12/cn.png" };
-            document.getElementById('current-flag').src = flagUrls[currentLang];
             if (allMembers.length > 0) renderList(allMembers);
         });
     }
 
-    // Lancement des écoutes
     setupAuthListener();
     listenToGlobalData();
 });
