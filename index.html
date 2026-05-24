@@ -9,7 +9,7 @@
 </head>
 <body>
 
-    <!-- UTILITY BAR (Barre supérieure 2006) -->
+    <!-- UTILITY TOP BAR -->
     <div id="util-bar">
         <div class="util-left">
             <span id="tagline">Broadcast Yourself™</span>
@@ -25,13 +25,14 @@
         </div>
     </div>
 
-    <!-- MAIN HEADER -->
+    <!-- MAIN RETRO HEADER -->
     <header id="main-header">
         <div class="logo-container">
-            <!-- Correction ici : Le CORD est dans sa boîte BLEUE rétro -->
+            <!-- Boîte BLEUE rétro pour CORD -->
             <div class="logo-usms">USMS <span class="logo-box">CORD</span></div>
         </div>
         
+        <!-- Onglets originaux 2006 -->
         <nav id="nav-tabs">
             <a href="#" class="tab-item">Home</a>
             <a href="#" class="tab-item">Videos</a>
@@ -40,33 +41,32 @@
         </nav>
     </header>
 
-    <!-- CONTENT -->
+    <!-- CONTENT WRAPPER -->
     <div id="page-container">
         
-        <!-- LISTE DES MEMBRES DISCORD -->
+        <!-- COLONNE GAUCHE : LISTE -->
         <div id="left-column">
             <div class="section-box">
                 <div class="box-title">
-                    <span id="box-title-text">Discord Members</span>
+                    <span id="box-title-text">Connected Members</span>
                 </div>
                 <div class="box-body">
                     <ul id="users-list">
-                        <li class="loading-item">Loading members...</li>
+                        <li class="loading-item">Loading...</li>
                     </ul>
                 </div>
             </div>
         </div>
 
-        <!-- FICHE PROFIL DU MEMBRE SÉLECTIONNÉ -->
+        <!-- COLONNE DROITE : FICHE PROFIL -->
         <div id="right-column">
             <div class="section-box blue-box">
                 <div class="box-title">
-                    <span id="profile-title-text">Member Profile Card</span>
+                    <span id="profile-title-text">USMS Profile Card</span>
                 </div>
                 <div class="box-body" id="details-box">
                     <div class="no-selection">
-                        <i class="fa-solid fa-arrow-left" style="margin-right: 5px;"></i>
-                        Select a member on the left to inspect their vintage profile card.
+                        Select a community member on the left to view their details.
                     </div>
                 </div>
             </div>
@@ -74,7 +74,7 @@
 
     </div>
 
-    <!-- FOOTER -->
+    <!-- VINTAGE FOOTER -->
     <footer id="retro-footer">
         <div>
             <a href="#">About Us</a> | <a href="#">Terms of Use</a> | <a href="#">Privacy Policy</a> | <a href="#">Help</a>
@@ -82,6 +82,6 @@
         <div class="copyright">Copyright © 2006 USMS CORD, LLC</div>
     </footer>
 
-    <script type="module" src="script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
