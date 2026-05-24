@@ -37,7 +37,7 @@ body {
     border: 1px solid #999;
 }
 
-/* MAIN HEADER & LOGO BLEU */
+/* LOGO AVEC LA BOITE BLEUE */
 #main-header {
     padding: 15px 20px 0 20px;
 }
@@ -50,10 +50,9 @@ body {
     color: #000;
 }
 
-/* LA BOÎTE BLEUE DE USMS CORD */
 .logo-box {
     font-size: 26px;
-    background-color: #0055ff; /* Bleu rétro USMS */
+    background-color: #0055ff; /* Ta couleur bleue USMS CORD */
     color: #FFFFFF;
     padding: 2px 6px;
     border-radius: 5px;
@@ -93,62 +92,64 @@ body {
     color: #333333;
 }
 
-/* STRUCTURE */
+/* STRUCTURE GRILLE */
 #page-container {
-    max-width: 1000px;
+    max-width: 1100px;
     margin: 20px auto;
     padding: 0 15px;
     display: flex;
-    gap: 15px;
+    gap: 20px;
 }
 
-#left-column, #right-column {
+#left-column {
+    width: 300px;
+    flex-shrink: 0;
+}
+
+#right-column {
     flex: 1;
 }
 
-/* BOITES DE SECTION */
+/* BOITES DE SECTION TYPES */
 .section-box {
     border: 1px solid #CCCCCC;
     background-color: #FFFFFF;
-    margin-bottom: 15px;
 }
 
 .section-box .box-title {
-    background-color: #EAEAEA;
+    background-color: #666666;
     padding: 5px 10px;
-    border-bottom: 1px solid #CCCCCC;
     font-weight: bold;
-    color: #444444;
+    color: #FFFFFF;
     font-size: 13px;
 }
 
-/* Theme Bleu */
+/* Cadre de droite Style Carte Bleue 2006 */
 .section-box.blue-box {
-    border: 1px solid #B4C6E7;
+    border: 1px solid #999999;
 }
 
 .section-box.blue-box .box-title {
-    background-color: #D9E1F2;
-    border-bottom: 1px solid #B4C6E7;
-    color: #1F4E79;
+    background-color: #666666;
+    color: #FFFFFF;
 }
 
 .box-body {
-    padding: 10px;
+    padding: 12px;
 }
 
-/* LISTE DE MEMBRES */
+/* REPERTOIRE DES UTILISATEURS */
 #users-list {
     list-style: none;
-    max-height: 450px;
+    max-height: 500px;
     overflow-y: auto;
 }
 
 .user-item {
     display: flex;
     align-items: center;
-    padding: 8px 6px;
-    border-bottom: 1px dashed #EEEEEE;
+    padding: 6px;
+    border-bottom: 1px solid #EEEEEE;
     cursor: pointer;
 }
 
@@ -157,7 +158,7 @@ body {
 }
 
 .user-item.active {
-    background-color: #E8F0FE; /* Surlignage bleu clair rétro */
+    background-color: #E8F0FE;
     border: 1px solid #B4C6E7;
 }
 
@@ -167,20 +168,20 @@ body {
 }
 
 .mini-avatar {
-    width: 38px;
-    height: 38px;
+    width: 32px;
+    height: 32px;
     border: 1px solid #999999;
     background-color: #FFF;
     display: block;
 }
 
-/* Statuts Discord */
+/* Pastilles de statut de présence Discord */
 .status-dot {
     position: absolute;
     bottom: -1px;
     right: -1px;
-    width: 9px;
-    height: 9px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
     border: 1px solid white;
 }
@@ -197,43 +198,39 @@ body {
 .nickname {
     font-weight: bold;
     color: #0033CC;
-    font-size: 13px;
 }
 
 .role-tag {
-    font-size: 11px;
+    font-size: 10px;
     color: #666666;
-    margin-top: 1px;
 }
 
-/* PROFILE CARD */
+/* DETAIL PROFILE CARD */
 .no-selection {
-    color: #777;
-    font-style: italic;
-    text-align: center;
-    padding: 50px 0;
+    color: #666;
+    padding: 30px 10px;
 }
 
 .profile-header {
     display: flex;
     gap: 15px;
-    border-bottom: 1px solid #B4C6E7;
+    border-bottom: 1px solid #CCCCCC;
     padding-bottom: 12px;
     margin-bottom: 12px;
 }
 
 .big-avatar {
-    width: 80px;
-    height: 80px;
-    border: 2px solid #1F4E79;
-    padding: 2px;
+    width: 64px;
+    height: 64px;
+    border: 1px solid #999;
+    padding: 1px;
     background-color: white;
 }
 
 .profile-title h2 {
-    font-size: 18px;
-    color: #1F4E79;
-    margin-bottom: 3px;
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 2px;
 }
 
 .profile-title span {
@@ -242,35 +239,33 @@ body {
 }
 
 .info-row {
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     display: flex;
-    align-items: baseline;
 }
 
 .info-label {
-    width: 110px;
+    width: 100px;
     font-weight: bold;
-    color: #555;
+    color: #666;
 }
 
 .roles-container {
     display: flex;
     flex-wrap: wrap;
-    gap: 5px;
+    gap: 4px;
 }
 
 .discord-role {
-    font-size: 11px;
-    padding: 2px 6px;
+    font-size: 10px;
+    padding: 1px 5px;
     border: 1px solid #999;
-    border-radius: 3px;
-    font-weight: bold;
+    border-radius: 2px;
 }
 
-/* FOOTER */
+/* FOOTER RÉTRO */
 #retro-footer {
     text-align: center;
-    margin-top: 40px;
+    margin-top: 50px;
     padding: 20px 0;
     border-top: 1px solid #EAEAEA;
     color: #666666;
@@ -286,6 +281,6 @@ body {
 }
 
 .copyright {
-    margin-top: 5px;
+    margin-top: 4px;
     font-size: 11px;
 }
