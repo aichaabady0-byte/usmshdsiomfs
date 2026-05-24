@@ -37,8 +37,8 @@ module.exports = async (req, res) => {
         const allRoles = rolesRes.ok ? await rolesRes.json() : [];
         const rolesMap = new Map(allRoles.map(r => [r.id, { name: r.name, color: '#' + r.color.toString(16).padStart(6, '0') }]));
 
-        // 3. Fetch des membres (on demande 1000 membres au max)
-        const membersRes = await fetch(`https://discord.com/api/v10/guilds/${guildId}/members?limit=1000', {
+        // 3. Fetch des membres (CORRIGÉ : plus de problème de guillemets ici)
+        const membersRes = await fetch(`https://discord.com/api/v10/guilds/${guildId}/members?limit=1000`, {
             headers: { 'Authorization': `Bot ${token}` }
         });
 
