@@ -3,7 +3,6 @@ import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.
 
 document.addEventListener("DOMContentLoaded", () => {
     
-    // Éléments de l'interface
     const usersList = document.getElementById('users-list');
     const detailsBox = document.getElementById('details-box');
     const langSelect = document.getElementById('lang-select');
@@ -16,22 +15,21 @@ document.addEventListener("DOMContentLoaded", () => {
     let currentLang = 'en';
     let database;
 
-    // CONFIGURATION FIREBASE (À remplir avec tes vraies clés de ta console Firebase)
+    // TA CONFIGURATION FIREBASE SECRÈTE
     const firebaseConfig = {
-        apiKey: "AIzaSyD3l4bnRhUUXjYMkXHcQPZpfocCVZWMjOg",
+        apiKey: "METS_TON_API_KEY_ICI",
         authDomain: "usmscord.firebaseapp.com",
-        databaseURL: "https://usmscord-default-rtdb.firebaseio.com",
+        databaseURL: "https://usmscord-default-rtdb.firebaseio.com/",
         projectId: "usmscord",
-        storageBucket: "usmscord.firebasestorage.app",
-        messagingSenderId: "1035262779396",
-        appId: "1:1035262779396:web:3802738f0f998834681551"
+        storageBucket: "usmscord.appspot.com",
+        messagingSenderId: "TON_MESSAGING_SENDER_ID",
+        appId: "TON_APP_ID"
     };
 
-    // Initialisation
     const app = initializeApp(firebaseConfig);
     database = getDatabase(app);
 
-    // TRADUCTIONS COMPLETE STYLE 2006
+    // TRADUCTIONS DES LANGUES 2006
     const translations = {
         en: {
             boxTitle: "Discord Members",
@@ -68,7 +66,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
-    // Lecture des membres de ton serveur Discord envoyés par le bot
+    // Lecture du nœud de synchronisation créé par ton bot Discord
     function listenToDiscordMembers() {
         if (!database) return;
 
@@ -85,7 +83,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Affichage de la liste à gauche
     function renderList(members) {
         if (!usersList) return;
         usersList.innerHTML = ""; 
@@ -113,7 +110,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Sélection et affichage de la fiche profil à droite
     function selectUser(member, element) {
         if (!detailsBox) return;
         
@@ -145,28 +141,21 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
     }
 
-    // Gestion du changement de langue
     if (langSelect) {
         langSelect.addEventListener('change', (e) => {
             currentLang = e.target.value;
             
-            // Mise à jour du drapeau
             const flagUrls = { en: "https://flagcdn.com/16x12/us.png", fr: "https://flagcdn.com/16x12/fr.png", zh: "https://flagcdn.com/16x12/cn.png" };
             if (currentFlag) currentFlag.src = flagUrls[currentLang];
             
-            // Traduction immédiate des textes de structure
             const t = translations[currentLang];
             if (boxTitleText) boxTitleText.innerText = t.boxTitle;
             if (profileTitleText) profileTitleText.innerText = t.profileTitle;
             
-            // Force la réinitialisation de la boîte de droite avec la bonne langue
             detailsBox.innerHTML = `<div class="no-selection"><i class="fa-solid fa-arrow-left" style="margin-right: 5px;"></i>${t.noSelection}</div>`;
-            
-            // Rafraîchissement de la liste
             if (allMembers.length > 0) renderList(allMembers);
         });
     }
 
-    // Initialisation globale
     listenToDiscordMembers();
-}); 
+});
