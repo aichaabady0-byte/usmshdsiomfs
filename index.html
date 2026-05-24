@@ -3,20 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>USMS CORD - Members</title>
+    <title>USMS CORD - Channels & Members</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <!-- BARRE SUPÉRIEURE -->
-    <header id="top-bar">
-        <div class="logo-usms">USMS <span class="logo-box">CORD</span></div>
-        
-        <div class="search-container">
-            <input type="text" id="search-input" placeholder="Search a member...">
+    <div id="util-bar">
+        <div class="util-left">
+            <span id="tagline">Broadcast Yourself™</span>
         </div>
-
-        <div class="lang-container">
+        <div class="util-right">
             <label for="lang-select">Language:</label>
             <img id="current-flag" src="https://flagcdn.com/16x12/us.png" alt="flag">
             <select id="lang-select">
@@ -25,27 +21,48 @@
                 <option value="zh">中文</option>
             </select>
         </div>
+    </div>
+
+    <header id="main-header">
+        <div class="logo-container">
+            <div class="logo-usms">USMS <span class="logo-box">CORD</span></div>
+        </div>
+        
+        <div class="search-container">
+            <input type="text" id="search-input" placeholder="Search a member...">
+        </div>
     </header>
 
-    <!-- SECTION TITRE PRINCIPALE -->
-    <div class="main-title-bar">
-        <h1 id="page-title">Server Members</h1>
-    </div>
-
-    <!-- GRILLE DE TOUS LES MEMBRES -->
-    <div id="members-grid">
-        <div class="loading" id="loading-text">Loading members...</div>
-    </div>
-
-    <!-- FENÊTRE POPUP (MODALE) POUR LES DÉTAILS AU CLIC -->
-    <div id="profile-modal" class="modal-overlay">
-        <div class="modal-content">
-            <button class="close-modal-btn">&times;</button>
-            <div id="modal-body">
-                <!-- Rempli dynamiquement en JS -->
+    <div id="page-container">
+        
+        <div class="section-box">
+            <div class="box-title">
+                <span id="page-title">Channels / Server Members</span>
+            </div>
+            
+            <div class="box-body">
+                <div id="members-grid">
+                    <div class="loading" id="loading-text">Loading members...</div>
+                </div>
             </div>
         </div>
+
+        <div id="profile-detail-zone" class="section-box blue-box" style="display: none;">
+            <div class="box-title-blue">
+                <span id="detail-title-text">Member Profile Inspection</span>
+            </div>
+            <div class="box-body-blue" id="modal-body">
+                </div>
+        </div>
+
     </div>
+
+    <footer id="retro-footer">
+        <div>
+            <a href="#">About Us</a> | <a href="#">Terms of Use</a> | <a href="#">Privacy Policy</a> | <a href="#">Help</a>
+        </div>
+        <div class="copyright">Copyright © 2006 USMS CORD, LLC</div>
+    </footer>
 
     <script src="script.js"></script>
 </body>
