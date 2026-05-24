@@ -7,6 +7,5 @@ module.exports = async (req, res) => {
         return res.status(200).end();
     }
 
-    // L'API ne donne plus aucune clé secrète au navigateur.
     return res.status(200).json({ status: "USMS API Online" });
 };
