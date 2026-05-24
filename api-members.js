@@ -14,43 +14,44 @@ module.exports = async (req, res) => {
     if (!token || !guildId) {
         return res.status(500).json({ 
             error: "Missing Configuration", 
-            details: "DISCORD_BOT_TOKEN or DISCORD_GUILD_ID is not set in Vercel." 
+            details: `Token present: ${!!token}, Guild ID present: ${!!guildId}` 
         });
     }
 
     try {
-        // 1. Récupérer les informations du serveur (pour le nom du serveur)
+        // 1. Fetch du serveur
         const guildRes = await fetch(`https://discord.com/api/v10/guilds/${guildId}`, {
             headers: { 'Authorization': `Bot ${token}` }
         });
 
         if (!guildRes.ok) {
             const errText = await guildRes.text();
-            throw new Error(`Discord Guild API responded with status ${guildRes.status}: ${errText}`);
+            return res.status(500).json({ error: "Discord Guild API Error", details: errText, status: guildRes.status });
         }
         const guildData = await guildRes.json();
 
-        // 2. Récupérer la liste des rôles du serveur pour faire la correspondance des couleurs plus tard
+        // 2. Fetch des rôles
         const rolesRes = await fetch(`https://discord.com/api/v10/guilds/${guildId}/roles`, {
             headers: { 'Authorization': `Bot ${token}` }
         });
         const allRoles = rolesRes.ok ? await rolesRes.json() : [];
         const rolesMap = new Map(allRoles.map(r => [r.id, { name: r.name, color: '#' + r.color.toString(16).padStart(6, '0') }]));
 
-        // 3. Récupérer la liste des membres (limité aux 1000 premiers membres par défaut via API)
-        const membersRes = await fetch(`https://discord.com/api/v10/guilds/${guildId}/members?limit=1000`, {
+        // 3. Fetch des membres (on demande 1000 membres au max)
+        const membersRes = await fetch(`https://discord.com/api/v10/guilds/${guildId}/members?limit=1000', {
             headers: { 'Authorization': `Bot ${token}` }
         });
 
         if (!membersRes.ok) {
             const errText = await membersRes.text();
-            throw new Error(`Discord Members API responded with status ${membersRes.status}: ${errText}`);
+            return res.status(500).json({ error: "Discord Members API Error", details: errText, status: membersRes.status });
         }
         const membersData = await membersRes.json();
 
-        // 4. Structurer les données proprement pour ton script.js
+        // 4. Traitement des membres
         const memberList = membersData.map(m => {
-            // Associer et trier les rôles du membre par position
+            if (!m.user) return null;
+
             const memberRoles = (m.roles || [])
                 .map(roleId => {
                     const found = rolesMap.get(roleId);
@@ -63,7 +64,6 @@ module.exports = async (req, res) => {
                 })
                 .sort((a, b) => b.position - a.position);
 
-            // Gérer l'avatar de l'utilisateur (fallback sur l'avatar par défaut de Discord s'il n'en a pas)
             let avatarUrl = "https://discord.com/assets/c09a1f2c4e3434665332.svg";
             if (m.user.avatar) {
                 avatarUrl = `https://cdn.discordapp.com/avatars/${m.user.id}/${m.user.avatar}.png?size=128`;
@@ -74,11 +74,11 @@ module.exports = async (req, res) => {
                 username: m.user.username,
                 nickname: m.nick || m.user.global_name || m.user.username,
                 avatar: avatarUrl,
-                status: "online", // Par défaut "online" via HTTP (l'API HTTP basique ne donne pas le statut live instantané sans passer par Gateway)
+                status: "online", 
                 roles: memberRoles.map(r => ({ name: r.name, color: r.color })),
                 joinedAt: m.joined_at
             };
-        });
+        }).filter(Boolean);
 
         return res.status(200).json({
             serverName: guildData.name,
@@ -87,9 +87,8 @@ module.exports = async (req, res) => {
         });
 
     } catch (error) {
-        console.error("Backend Error Details:", error.message);
         return res.status(500).json({ 
-            error: "Failed to fetch Discord data via HTTP", 
+            error: "Server Crash", 
             details: error.message 
         });
     }
