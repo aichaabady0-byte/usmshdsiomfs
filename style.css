@@ -3,47 +3,29 @@
     margin: 0;
     padding: 0;
     font-family: Arial, Helvetica, sans-serif;
-    font-size: 12px;
 }
 
 body {
-    background-color: #FFFFFF;
+    background-color: #F6F6F6;
     color: #333333;
+    padding: 20px;
 }
 
-/* UTILITY BAR */
-#util-bar {
-    background-color: #EAEAEA;
-    border-bottom: 1px solid #CCCCCC;
-    padding: 4px 20px;
+/* BARRE SUPÉRIEURE */
+#top-bar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-}
-
-#tagline {
-    font-style: italic;
-    color: #666666;
-    font-weight: bold;
-}
-
-.util-right {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-
-#current-flag {
-    border: 1px solid #999;
-}
-
-/* LOGO AVEC LA BOITE BLEUE */
-#main-header {
-    padding: 15px 20px 0 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #EAEAEA;
+    background-color: #FFFFFF;
+    padding: 15px 20px;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
 .logo-usms {
-    font-size: 28px;
+    font-size: 22px;
     font-weight: bold;
     font-family: "Arial Black", Gadget, sans-serif;
     letter-spacing: -1px;
@@ -51,236 +33,240 @@ body {
 }
 
 .logo-box {
-    font-size: 26px;
-    background-color: #0055ff; /* Ta couleur bleue USMS CORD */
+    font-size: 20px;
+    background-color: #0055ff;
     color: #FFFFFF;
-    padding: 2px 6px;
-    border-radius: 5px;
-    margin-left: 1px;
+    padding: 1px 5px;
+    border-radius: 4px;
 }
 
-/* NAV TABS 2006 */
-#nav-tabs {
-    margin-top: 15px;
-    border-bottom: 2px solid #EAEAEA;
-    display: flex;
-    gap: 3px;
-}
-
-.tab-item {
-    display: inline-block;
-    padding: 6px 12px;
-    text-decoration: none;
-    color: #0033CC;
-    font-weight: bold;
-    background-color: #F1F1F1;
-    border: 1px solid #EAEAEA;
-    border-bottom: none;
-    border-top-left-radius: 4px;
-    border-top-right-radius: 4px;
-}
-
-.tab-item:hover {
-    background-color: #E2E2E2;
-}
-
-.tab-item.id-active {
-    background-color: #FFFFFF;
-    border: 2px solid #EAEAEA;
-    border-bottom: 2px solid #FFFFFF;
-    margin-bottom: -2px;
-    color: #333333;
-}
-
-/* STRUCTURE GRILLE */
-#page-container {
-    max-width: 1100px;
-    margin: 20px auto;
-    padding: 0 15px;
-    display: flex;
-    gap: 20px;
-}
-
-#left-column {
+.search-container input {
     width: 300px;
-    flex-shrink: 0;
-}
-
-#right-column {
-    flex: 1;
-}
-
-/* BOITES DE SECTION TYPES */
-.section-box {
+    padding: 6px 12px;
     border: 1px solid #CCCCCC;
-    background-color: #FFFFFF;
-}
-
-.section-box .box-title {
-    background-color: #666666;
-    padding: 5px 10px;
-    font-weight: bold;
-    color: #FFFFFF;
+    border-radius: 4px;
     font-size: 13px;
 }
 
-/* Cadre de droite Style Carte Bleue 2006 */
-.section-box.blue-box {
-    border: 1px solid #999999;
-}
-
-.section-box.blue-box .box-title {
-    background-color: #666666;
-    color: #FFFFFF;
-}
-
-.box-body {
-    padding: 12px;
-}
-
-/* REPERTOIRE DES UTILISATEURS */
-#users-list {
-    list-style: none;
-    max-height: 500px;
-    overflow-y: auto;
-}
-
-.user-item {
+.lang-container {
     display: flex;
     align-items: center;
-    padding: 6px;
-    border-bottom: 1px solid #EEEEEE;
+    gap: 6px;
+    font-size: 13px;
+}
+
+#current-flag {
+    border: 1px solid #999;
+}
+
+#lang-select {
+    padding: 3px;
+    font-size: 12px;
+}
+
+/* BARRE TITRE DE LA PAGE */
+.main-title-bar {
+    margin: 25px 0 15px 0;
+}
+
+#page-title {
+    font-size: 18px;
+    color: #444444;
+    font-weight: bold;
+    border-left: 4px solid #0055ff;
+    padding-left: 10px;
+}
+
+/* GRILLE DES CARTES MEMBRES */
+#members-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+    margin-top: 10px;
+}
+
+.loading {
+    grid-column: 1 / -1;
+    text-align: center;
+    font-size: 14px;
+    color: #666;
+    padding: 4px 0;
+}
+
+/* LA CARTE MEMBRE INDIVIDUELLE */
+.member-card {
+    background-color: #FFFFFF;
+    border: 1px solid #E0E0E0;
+    border-radius: 6px;
+    padding: 15px;
+    text-align: center;
     cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.02);
 }
 
-.user-item:hover {
-    background-color: #F5F5F5;
-}
-
-.user-item.active {
-    background-color: #E8F0FE;
-    border: 1px solid #B4C6E7;
+.member-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    border-color: #0055ff;
 }
 
 .avatar-container {
     position: relative;
-    margin-right: 10px;
+    width: 72px;
+    height: 72px;
+    margin: 0 auto 12px auto;
 }
 
-.mini-avatar {
-    width: 32px;
-    height: 32px;
-    border: 1px solid #999999;
-    background-color: #FFF;
-    display: block;
+.card-avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    border: 2px solid #EEEEEE;
+    object-fit: cover;
 }
 
-/* Pastilles de statut de présence Discord */
+/* Pastille de statut Discord */
 .status-dot {
     position: absolute;
-    bottom: -1px;
-    right: -1px;
-    width: 8px;
-    height: 8px;
+    bottom: 2px;
+    right: 2px;
+    width: 12px;
+    height: 12px;
     border-radius: 50%;
-    border: 1px solid white;
+    border: 2px solid #FFFFFF;
 }
 .status-dot.online { background-color: #2ecc71; }
 .status-dot.idle { background-color: #f1c40f; }
 .status-dot.dnd { background-color: #e74c3c; }
 .status-dot.offline { background-color: #95a5a6; }
 
-.user-info {
-    display: flex;
-    flex-direction: column;
-}
-
-.nickname {
+.card-name {
+    font-size: 14px;
     font-weight: bold;
-    color: #0033CC;
+    color: #222222;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.role-tag {
-    font-size: 10px;
+.card-role {
+    font-size: 11px;
     color: #666666;
+    font-weight: 500;
+    background-color: #F0F2F5;
+    padding: 2px 6px;
+    border-radius: 12px;
+    display: inline-block;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-/* DETAIL PROFILE CARD */
-.no-selection {
-    color: #666;
-    padding: 30px 10px;
-}
-
-.profile-header {
+/* FENÊTRE MODALE (POPUP) DÉTAILS */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
     display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 999;
+}
+
+.modal-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-content {
+    background-color: #FFFFFF;
+    width: 360px;
+    border-radius: 8px;
+    padding: 20px;
+    position: relative;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.close-modal-btn {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    background: none;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+    color: #999;
+}
+
+.close-modal-btn:hover {
+    color: #333;
+}
+
+/* CONTENU DE LA MODALE */
+.modal-header {
+    display: flex;
+    align-items: center;
     gap: 15px;
-    border-bottom: 1px solid #CCCCCC;
-    padding-bottom: 12px;
+    border-bottom: 1px solid #EEEEEE;
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+}
+
+.modal-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: 1px solid #DDD;
+}
+
+.modal-title-info h2 {
+    font-size: 16px;
+    color: #111;
+}
+
+.modal-title-info span {
+    font-size: 12px;
+    color: #666;
+}
+
+.modal-row {
     margin-bottom: 12px;
 }
 
-.big-avatar {
-    width: 64px;
-    height: 64px;
-    border: 1px solid #999;
-    padding: 1px;
-    background-color: white;
-}
-
-.profile-title h2 {
-    font-size: 16px;
-    color: #333;
-    margin-bottom: 2px;
-}
-
-.profile-title span {
-    color: #666;
+.modal-label {
     font-size: 11px;
-}
-
-.info-row {
-    margin-bottom: 8px;
-    display: flex;
-}
-
-.info-label {
-    width: 100px;
     font-weight: bold;
-    color: #666;
+    color: #888888;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 3px;
 }
 
-.roles-container {
+.modal-value {
+    font-size: 13px;
+    color: #333;
+}
+
+.modal-roles-list {
     display: flex;
     flex-wrap: wrap;
     gap: 4px;
-}
-
-.discord-role {
-    font-size: 10px;
-    padding: 1px 5px;
-    border: 1px solid #999;
-    border-radius: 2px;
-}
-
-/* FOOTER RÉTRO */
-#retro-footer {
-    text-align: center;
-    margin-top: 50px;
-    padding: 20px 0;
-    border-top: 1px solid #EAEAEA;
-    color: #666666;
-}
-
-#retro-footer a {
-    color: #0033CC;
-    text-decoration: none;
-}
-
-#retro-footer a:hover {
-    text-decoration: underline;
-}
-
-.copyright {
     margin-top: 4px;
-    font-size: 11px;
+}
+
+.modal-role-badge {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: bold;
+    border: 1px solid currentColor;
 }
