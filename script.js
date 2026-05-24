@@ -4,7 +4,7 @@ import { getDatabase, ref, set, get, child, push, onValue } from "https://www.gs
 
 document.addEventListener("DOMContentLoaded", () => {
     
-    // Éléments HTML
+    // Éléments HTML de l'interface
     const usersList = document.getElementById('users-list');
     const detailsBox = document.getElementById('details-box');
     const langSelect = document.getElementById('lang-select');
@@ -27,9 +27,9 @@ document.addEventListener("DOMContentLoaded", () => {
     
     let auth, database;
 
-    // Configuration Firebase (Met tes vraies valeurs ici, c'est public et sécurisé)
+    // CONFIGURATION FIREBASE (À remplir avec tes vraies clés de ta console Firebase)
     const firebaseConfig = {
-        apiKey: "METS_TON_API_KEY_ICI",
+        apiKey: "AIzaSyD3l4bnRhUUXjYMkXHcQPZpfocCVZWMjOg",
         authDomain: "usmscord.firebaseapp.com",
         databaseURL: "https://usmscord-default-rtdb.firebaseio.com/",
         projectId: "usmscord",
@@ -38,12 +38,12 @@ document.addEventListener("DOMContentLoaded", () => {
         appId: "TON_APP_ID"
     };
 
-    // Initialisation immédiate de Firebase au chargement du site
+    // Initialisation immédiate de Firebase
     const app = initializeApp(firebaseConfig);
     auth = getAuth(app);
     database = getDatabase(app);
 
-    // Système d'onglets de la barre latérale
+    // Système d'onglets (Sidebar Gauche)
     const tabButtons = document.querySelectorAll('.tab-btn');
     tabButtons.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -72,16 +72,16 @@ document.addEventListener("DOMContentLoaded", () => {
         zh: { tagline: "Broadcast Yourself™", loading: "正在加载...", noRole: "无身份组", status: { online: "在线", idle: "闲置", dnd: "请勿打扰", offline: "离线" } }
     };
 
-    // Écoute des données Firebase en temps réel
+    // Écoute des données Firebase en temps réel (Salons + Membres)
     function listenToGlobalData() {
         if (!database) return;
 
-        // 1. Charger les salons (poussés par le bot Discord)
+        // 1. Charger les salons textuels synchronisés par ton bot
         onValue(ref(database, 'channels'), (snapshot) => {
             if (snapshot.exists()) {
                 renderChannels(Object.values(snapshot.val()));
             } else {
-                // Salons de secours si le bot n'a pas encore synchronisé
+                // Salons de secours si le bot n'a encore rien envoyé
                 renderChannels([
                     { id: "cat-1", name: "TEXT CHANNELS", type: 4, position: 1 },
                     { id: "general", name: "general", type: 0, parentId: "cat-1", position: 2 }
@@ -175,7 +175,7 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
     }
 
-    // Gestion du Tchat
+    // Gestion de l'affichage et de la réception des messages du Tchat
     function listenToChannelMessages(channelId) {
         if (!chatMessages) return;
         onValue(ref(database, `messages/${channelId}`), (snapshot) => {
@@ -212,7 +212,7 @@ document.addEventListener("DOMContentLoaded", () => {
         chatInputText.value = "";
     }
 
-    // Comptes et Authentification
+    // Système d'authentification (Connexion / Inscription)
     const btnRegister = document.getElementById('btn-register');
     const btnLogin = document.getElementById('btn-login');
     const btnLogout = document.getElementById('btn-logout');
@@ -283,7 +283,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Panel d'administration
+    // Gestion du panel Admin (Attribution de Badges)
     const btnGiveBadge = document.getElementById('btn-give-badge');
     if (btnGiveBadge) {
         btnGiveBadge.addEventListener('click', async () => {
@@ -295,7 +295,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if(!u.badges) u.badges = [];
                 u.badges.push(badge);
                 await set(ref(database, `users/${targetUser}`), u);
-                alert("Badge attribué !");
+                alert("Badge attribué avec succès !");
             }
         });
     }
@@ -309,6 +309,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // Lancement des écoutes
     setupAuthListener();
     listenToGlobalData();
 });
