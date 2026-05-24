@@ -8,6 +8,7 @@ module.exports = async (req, res) => {
     }
 
     try {
+        // Envoi de la configuration Firebase au script de ton site
         return res.status(200).json({
             firebaseConfig: {
                 apiKey: process.env.FIREBASE_API_KEY,
