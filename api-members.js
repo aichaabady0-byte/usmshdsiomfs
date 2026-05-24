@@ -1,6 +1,6 @@
 const { Client, GatewayIntentBits } = require('discord.js');
 
-// Initialisation du client Discord en dehors du handler pour réutilisation (Performance)
+// Initialisation avec les bons intents
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
@@ -11,10 +11,11 @@ const client = new Client({
 
 let isReady = false;
 client.once('ready', () => { isReady = true; });
-client.login(process.env.DISCORD_TOKEN).catch(err => console.error("Discord Login Error:", err));
+
+// CORRECTION : Utilisation exacte de la variable DISCORD_BOT_TOKEN de ton image_71b668.png
+client.login(process.env.DISCORD_BOT_TOKEN).catch(err => console.error("Discord Login Error:", err));
 
 module.exports = async (req, res) => {
-    // Configuration des headers CORS obligatoires
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -25,22 +26,21 @@ module.exports = async (req, res) => {
 
     try {
         if (!isReady) {
-            // Attendre un court instant si le client n'est pas encore prêt
             await new Promise(resolve => setTimeout(resolve, 1500));
         }
 
-        const guildId = process.env.GUILD_ID;
+        // CORRECTION : Utilisation exacte de la variable DISCORD_GUILD_ID de ton image_71b668.png
+        const guildId = process.env.DISCORD_GUILD_ID;
         const guild = await client.guilds.fetch(guildId);
         
         if (!guild) {
-            return res.status(500).json({ error: "Guild not found. Check GUILD_ID env variable." });
+            return res.status(500).json({ error: "Guild not found. Check DISCORD_GUILD_ID env variable." });
         }
 
-        // Récupérer tous les membres et forcer la mise à jour du cache des présences
+        // Récupération des membres avec leurs présences
         const members = await guild.members.fetch({ withPresences: true });
         
         const memberList = members.map(m => {
-            // Récupérer les rôles triés par importance (hors @everyone)
             const roles = m.roles.cache
                 .filter(r => r.name !== '@everyone')
                 .sort((a, b) => b.position - a.position)
@@ -52,7 +52,8 @@ module.exports = async (req, res) => {
                 nickname: m.displayName,
                 avatar: m.user.displayAvatarURL({ extension: 'png', size: 128 }),
                 status: m.presence ? m.presence.status : "offline",
-                roles: roles
+                roles: roles,
+                joinedAt: m.joinedAt // Récupération de la vraie date de join Discord !
             };
         });
 
