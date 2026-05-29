@@ -15,10 +15,11 @@ module.exports = async (req, res) => {
     const { action, code } = req.query;
 
     // 1. Redirection vers Discord Login
-    if (action === 'login') {
-        const discordAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify`;
-        return res.redirect(discordAuthUrl);
-    }
+if (action === 'login') {
+    // Colle ici l'URL générée que tu as copiée depuis l'interface de l'image_c96fd4.png
+    const discordAuthUrl = `https://discord.com/oauth2/authorize?client_id=1507809245163294811&response_type=code&redirect_uri=https%3A%2F%2Fusmscord.blabchat.space%2Fapi%2Fauth%3Faction%3Dcallback&scope=identify`;
+    return res.redirect(discordAuthUrl);
+}
 
     // 2. Callback de Discord
     if (action === 'callback' && code) {
