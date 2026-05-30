@@ -1,29 +1,36 @@
 const { createClient } = require('@vercel/kv');
 
+// Initialisation sécurisée de Vercel KV
 const kv = (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) 
   ? createClient({ url: process.env.KV_REST_API_URL, token: process.env.KV_REST_API_TOKEN }) 
   : null;
 
+// Nettoyage de l'URL pour éviter le bug du double slash ou slash manquant
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ? process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, '') : '';
+
 const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
-const REDIRECT_URI = `${process.env.NEXT_PUBLIC_SITE_URL}/api/auth?action=callback`;
+const REDIRECT_URI = `${BASE_URL}/api/auth?action=callback`;
 const GUILD_ID = process.env.DISCORD_GUILD_ID;
 const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
 
 module.exports = async (req, res) => {
     const { action, code } = req.query;
 
-    // 1. ACTION DE LOGIN : Redirige l'utilisateur vers la page de connexion officielle Discord
+    // 1. DIRECTION LE LOGIN DISCORD
     if (action === 'login') {
-        // Remplacer cette URL par ton lien Generated URL obtenu sur l'interface Discord Dev
-        const discordAuthUrl = `https://discord.com/oauth2/authorize?client_id=1507809245163294811&response_type=code&redirect_uri=https%3A%2F%2Fusmscord.blabchat.space%2Fapi%2Fauth%3Faction%3Dcallback&scope=identify`;
+        const discordAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify`;
         return res.redirect(discordAuthUrl);
     }
 
-    // 2. ACTION DE CALLBACK : Discord renvoie l'utilisateur ici avec un code temporaire
-    if (action === 'callback' && code) {
+    // 2. RETOUR DE DISCORD (CALLBACK)
+    if (action === 'callback') {
+        if (!code) {
+            return res.status(400).send("<h1>Erreur</h1><p>Aucun code d'authentification n'a été renvoyé par Discord.</p><a href='/'>Retour</a>");
+        }
+
         try {
-            // Échange du code contre un Access Token utilisateur
+            // On échange le code contre l'Access Token
             const tokenResponse = await fetch('https://discord.com/api/oauth2/token', {
                 method: 'POST',
                 body: new URLSearchParams({
@@ -37,26 +44,36 @@ module.exports = async (req, res) => {
             });
 
             const tokenData = await tokenResponse.json();
-            if (!tokenData.access_token) throw new Error('Impossible d\'obtenir l\'Access Token utilisateur');
+            
+            // Si l'access token n'est pas là, on crache le morceau pour voir ce qui ne va pas
+            if (!tokenData.access_token) {
+                return res.status(400).send(`
+                    <h1>Erreur d'authentification</h1>
+                    <p>Discord a refusé de délivrer l'Access Token.</p>
+                    <p><strong>Réponse brute de Discord :</strong> <code>${JSON.stringify(tokenData)}</code></p>
+                    <p><strong>URL de redirection envoyée :</strong> <code>${REDIRECT_URI}</code></p>
+                    <a href="/">Retourner à l'accueil</a>
+                `);
+            }
 
-            // Récupération de l'identité Discord basique (@me) de l'utilisateur connecté
+            // Récupération des infos de l'utilisateur connecté (@me)
             const userResponse = await fetch('https://discord.com/api/users/@me', {
                 headers: { Authorization: `Bearer ${tokenData.access_token}` },
             });
             const userData = await userResponse.json();
 
-            // SÉCURITÉ REQUISES : On interroge l'API Discord avec notre token de Bot pour savoir si l'user est dans le serveur
+            // Vérification : Le membre est-il sur ton serveur Discord ?
             const guildMemberResponse = await fetch(`https://discord.com/api/v10/guilds/${GUILD_ID}/members/${userData.id}`, {
                 headers: { Authorization: `Bot ${BOT_TOKEN}` },
             });
 
             if (!guildMemberResponse.ok) {
-                return res.status(403).send("<h1>Accès Refusé</h1><p>Tu dois obligatoirement faire partie du serveur Discord officiel pour vous connecter.</p><a href='/'>Retour à l'accueil</a>");
+                return res.status(403).send("<h1>Accès Refusé</h1><p>Tu dois faire partie du serveur Discord officiel pour te connecter ici.</p><a href='/'>Retour à l'accueil</a>");
             }
 
             const memberData = await guildMemberResponse.json();
 
-            // On charge tous les rôles du serveur pour mapper les IDs des rôles du membre avec leurs vrais noms/couleurs
+            // On récupère la liste des rôles pour choper les couleurs
             const rolesResponse = await fetch(`https://discord.com/api/v10/guilds/${GUILD_ID}/roles`, {
                 headers: { Authorization: `Bot ${BOT_TOKEN}` },
             });
@@ -66,7 +83,7 @@ module.exports = async (req, res) => {
                 return found ? { name: found.name, color: '#' + found.color.toString(16).padStart(6, '0') } : null;
             }).filter(Boolean);
 
-            // Construction de l'objet de session utilisateur final
+            // Préparation de la session
             const sessionUser = {
                 id: userData.id,
                 username: userData.username,
@@ -76,20 +93,20 @@ module.exports = async (req, res) => {
                 roles: userRoles
             };
 
-            // Enregistrement de l'utilisateur dans un cookie HTTP sécurisé d'une durée de 24h
+            // Création du cookie de session (valable 24 heures)
             res.setHeader('Set-Cookie', `usms_user=${encodeURIComponent(JSON.stringify(sessionUser))}; Path=/; Max-Age=86400; SameSite=Lax`);
             return res.redirect('/');
 
         } catch (error) {
-            return res.status(500).send(`<h1>Erreur d'authentification</h1><p>${error.message}</p>`);
+            return res.status(500).send(`<h1>Erreur Interne</h1><p>${error.message}</p>`);
         }
     }
 
-    // 3. ACTION DE LOGOUT : Efface le cookie de session pour déconnecter l'utilisateur
+    // 3. ACTION DE LOGOUT
     if (action === 'logout') {
         res.setHeader('Set-Cookie', 'usms_user=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT');
         return res.redirect('/');
     }
 
-    return res.status(400).json({ error: "Action invalide demandée." });
+    return res.status(400).json({ error: "Action inconnue." });
 };
