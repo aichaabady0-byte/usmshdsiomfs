@@ -60,11 +60,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 stayConnectedChoice = localStorage.getItem('usms_stay_connected');
             }
 
-            // Si l'utilisateur clique sur "Non", on liquide sa session lorsqu'il quitte le site
+            // Si l'utilisateur clique sur "Non", on liquide sa session uniquement s'il quitte vraiment l'application
             if (stayConnectedChoice === 'no') {
-                window.addEventListener('beforeunload', () => {
-                    document.cookie = "usms_user=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT";
-                    localStorage.removeItem('usms_stay_connected');
+                window.addEventListener('pagehide', (event) => {
+                    // On vérifie que ce n'est pas un simple rafraîchissement ou une redirection interne
+                    if (!event.persisted) {
+                        document.cookie = "usms_user=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT";
+                        localStorage.removeItem('usms_stay_connected');
+                    }
                 });
             }
 
