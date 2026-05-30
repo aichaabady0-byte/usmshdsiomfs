@@ -8,8 +8,9 @@ module.exports = async (req, res) => {
         return res.status(200).end();
     }
 
-    const token = process.env.DISCORD_BOT_TOKEN;
-    const guildId = process.env.DISCORD_GUILD_ID;
+    // Sécurisation des chaînes récupérées depuis Vercel env
+    const token = process.env.DISCORD_BOT_TOKEN ? process.env.DISCORD_BOT_TOKEN.trim() : null;
+    const guildId = process.env.DISCORD_GUILD_ID ? process.env.DISCORD_GUILD_ID.trim() : null;
 
     if (!token || !guildId) {
         return res.status(500).json({ 
@@ -19,7 +20,7 @@ module.exports = async (req, res) => {
     }
 
     try {
-        // 1. Fetch du serveur
+        // 1. Fetch du serveur (facultatif ici mais conservé pour validation de connectivité)
         const guildRes = await fetch(`https://discord.com/api/v10/guilds/${guildId}`, {
             headers: { 'Authorization': `Bot ${token}` }
         });
@@ -28,7 +29,6 @@ module.exports = async (req, res) => {
             const errText = await guildRes.text();
             return res.status(500).json({ error: "Discord Guild API Error", details: errText, status: guildRes.status });
         }
-        const guildData = await guildRes.json();
 
         // 2. Fetch des rôles
         const rolesRes = await fetch(`https://discord.com/api/v10/guilds/${guildId}/roles`, {
@@ -37,7 +37,7 @@ module.exports = async (req, res) => {
         const allRoles = rolesRes.ok ? await rolesRes.json() : [];
         const rolesMap = new Map(allRoles.map(r => [r.id, { name: r.name, color: '#' + r.color.toString(16).padStart(6, '0') }]));
 
-        // 3. Fetch des membres (CORRIGÉ : plus de problème de guillemets ici)
+        // 3. Fetch des membres
         const membersRes = await fetch(`https://discord.com/api/v10/guilds/${guildId}/members?limit=1000`, {
             headers: { 'Authorization': `Bot ${token}` }
         });
@@ -64,6 +64,11 @@ module.exports = async (req, res) => {
                 })
                 .sort((a, b) => b.position - a.position);
 
+            // Synchronisation : attribution virtuelle du badge Admin pour Fufu dans la liste
+            if (m.user.username.toLowerCase() === 'fufuofficial_') {
+                memberRoles.unshift({ name: "Admin 👑", color: "#FF0000", position: 9999 });
+            }
+
             let avatarUrl = "https://discord.com/assets/c09a1f2c4e3434665332.svg";
             if (m.user.avatar) {
                 avatarUrl = `https://cdn.discordapp.com/avatars/${m.user.id}/${m.user.avatar}.png?size=128`;
@@ -80,11 +85,9 @@ module.exports = async (req, res) => {
             };
         }).filter(Boolean);
 
-        return res.status(200).json({
-            serverName: guildData.name,
-            memberCount: memberList.length,
-            members: memberList
-        });
+        // RECTIFICATION : On renvoie directement le tableau nettoyé.
+        // Cela s'aligne parfaitement avec l'instruction "data.forEach" de ton script.js
+        return res.status(200).json(memberList);
 
     } catch (error) {
         return res.status(500).json({ 
