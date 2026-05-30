@@ -1,8 +1,9 @@
 {
-  "name": "usmscord-retro",
+  "name": "usms-cord-retro",
   "version": "1.0.0",
-  "engines": {
-    "node": "20.x"
-  },
-  "dependencies": {}
+  "description": "Platforme vidéo rétro USMS avec authentification Discord",
+  "main": "api-videos.js",
+  "dependencies": {
+    "@vercel/kv": "^1.0.1"
+  }
 }
