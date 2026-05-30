@@ -1,9 +1,8 @@
 const { createClient } = require('@vercel/kv');
 
-const kv = createClient({
-  url: process.env.KV_REST_API_URL,
-  token: process.env.KV_REST_API_TOKEN,
-});
+const kv = (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) 
+  ? createClient({ url: process.env.KV_REST_API_URL, token: process.env.KV_REST_API_TOKEN }) 
+  : null;
 
 const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
@@ -14,17 +13,17 @@ const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
 module.exports = async (req, res) => {
     const { action, code } = req.query;
 
-    // 1. Redirection vers Discord Login
-if (action === 'login') {
-    // Colle ici l'URL générée que tu as copiée depuis l'interface de l'image_c96fd4.png
-    const discordAuthUrl = `https://discord.com/oauth2/authorize?client_id=1507809245163294811&response_type=code&redirect_uri=https%3A%2F%2Fusmscord.blabchat.space%2Fapi%2Fauth%3Faction%3Dcallback&scope=identify`;
-    return res.redirect(discordAuthUrl);
-}
+    // 1. ACTION DE LOGIN : Redirige l'utilisateur vers la page de connexion officielle Discord
+    if (action === 'login') {
+        // Remplacer cette URL par ton lien Generated URL obtenu sur l'interface Discord Dev
+        const discordAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify`;
+        return res.redirect(discordAuthUrl);
+    }
 
-    // 2. Callback de Discord
+    // 2. ACTION DE CALLBACK : Discord renvoie l'utilisateur ici avec un code temporaire
     if (action === 'callback' && code) {
         try {
-            // Échange du code contre un Access Token
+            // Échange du code contre un Access Token utilisateur
             const tokenResponse = await fetch('https://discord.com/api/oauth2/token', {
                 method: 'POST',
                 body: new URLSearchParams({
@@ -38,26 +37,26 @@ if (action === 'login') {
             });
 
             const tokenData = await tokenResponse.json();
-            if (!tokenData.access_token) throw new Error('Failed to get access token');
+            if (!tokenData.access_token) throw new Error('Impossible d\'obtenir l\'Access Token utilisateur');
 
-            // Récupération du profil de l'utilisateur
+            // Récupération de l'identité Discord basique (@me) de l'utilisateur connecté
             const userResponse = await fetch('https://discord.com/api/users/@me', {
                 headers: { Authorization: `Bearer ${tokenData.access_token}` },
             });
             const userData = await userResponse.json();
 
-            // VÉRIFICATION : Est-il sur le serveur Discord ? (Via l'API Bot pour éviter d'avoir à redemander l'autorisation de guilde)
+            // SÉCURITÉ REQUISES : On interroge l'API Discord avec notre token de Bot pour savoir si l'user est dans le serveur
             const guildMemberResponse = await fetch(`https://discord.com/api/v10/guilds/${GUILD_ID}/members/${userData.id}`, {
                 headers: { Authorization: `Bot ${BOT_TOKEN}` },
             });
 
             if (!guildMemberResponse.ok) {
-                return res.status(403).send("<h1>Access Denied</h1><p>You must be a member of the official Discord server to log in.</p><a href='/'>Back to Home</a>");
+                return res.status(403).send("<h1>Accès Refusé</h1><p>Tu dois obligatoirement faire partie du serveur Discord officiel pour vous connecter.</p><a href='/'>Retour à l'accueil</a>");
             }
 
             const memberData = await guildMemberResponse.json();
 
-            // On récupère ses rôles sur le serveur
+            // On charge tous les rôles du serveur pour mapper les IDs des rôles du membre avec leurs vrais noms/couleurs
             const rolesResponse = await fetch(`https://discord.com/api/v10/guilds/${GUILD_ID}/roles`, {
                 headers: { Authorization: `Bot ${BOT_TOKEN}` },
             });
@@ -67,7 +66,7 @@ if (action === 'login') {
                 return found ? { name: found.name, color: '#' + found.color.toString(16).padStart(6, '0') } : null;
             }).filter(Boolean);
 
-            // Création de notre session utilisateur
+            // Construction de l'objet de session utilisateur final
             const sessionUser = {
                 id: userData.id,
                 username: userData.username,
@@ -77,20 +76,20 @@ if (action === 'login') {
                 roles: userRoles
             };
 
-            // On génère un cookie de session très simple
+            // Enregistrement de l'utilisateur dans un cookie HTTP sécurisé d'une durée de 24h
             res.setHeader('Set-Cookie', `usms_user=${encodeURIComponent(JSON.stringify(sessionUser))}; Path=/; Max-Age=86400; SameSite=Lax`);
             return res.redirect('/');
 
         } catch (error) {
-            return res.status(500).json({ error: "Auth failed", details: error.message });
+            return res.status(500).send(`<h1>Erreur d'authentification</h1><p>${error.message}</p>`);
         }
     }
 
-    // 3. Déconnexion
+    // 3. ACTION DE LOGOUT : Efface le cookie de session pour déconnecter l'utilisateur
     if (action === 'logout') {
         res.setHeader('Set-Cookie', 'usms_user=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT');
         return res.redirect('/');
     }
 
-    return res.status(400).json({ error: "Invalid action" });
+    return res.status(400).json({ error: "Action invalide demandée." });
 };
