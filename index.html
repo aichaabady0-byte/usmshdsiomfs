@@ -13,7 +13,7 @@
         <div class="util-left"><span id="tagline">Broadcast Yourself™</span></div>
         <div class="util-right">
             <span id="user-status-text">Not connected</span>
-            <button id="discord-auth-btn">Connect with Discord</button>
+            <button id="discord-auth-btn" class="retro-btn">Connect with Discord</button>
         </div>
     </div>
 
@@ -26,19 +26,30 @@
 
     <nav id="nav-tabs">
         <div class="tab active" data-target="page-home">Home</div>
+        <div class="tab" data-target="page-videos">Videos</div>
         <div class="tab" data-target="page-members">Channels & Members</div>
+        <div class="tab" data-target="page-community">Community</div>
     </nav>
 
     <div id="main-container">
         
         <div id="page-home" class="page-content active-page">
+            <div class="section-box">
+                <div class="box-title">Welcome Home</div>
+                <div class="box-body">
+                    <p style="font-size:14px; font-weight:bold; margin-bottom:10px;">Welcome to USMS CORD !</p>
+                    <p>Navigate through the tabs above to explore active members, check custom videos uploaded by the community, or join discussion hubs.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-videos" class="page-content">
             <div class="two-column-layout">
                 <div class="left-column">
                     <div class="section-box">
-                        <div class="box-title">Featured Videos</div>
+                        <div class="box-title">Featured Videos Feed</div>
                         <div class="box-body">
-                            <div id="videos-grid">
-                                </div>
+                            <div id="videos-grid"></div>
                         </div>
                     </div>
                 </div>
@@ -53,12 +64,12 @@
                                     <input type="text" id="vid-title" required>
                                 </div>
                                 <div class="form-group">
-                                    <label>Video URL (MP4, YouTube, etc.):</label>
-                                    <input type="url" id="vid-url" required>
+                                    <label>Video URL (.mp4 direct link):</label>
+                                    <input type="url" id="vid-url" required placeholder="https://site.com/video.mp4">
                                 </div>
                                 <div class="form-group">
-                                    <label>Thumbnail URL:</label>
-                                    <input type="url" id="vid-thumb" placeholder="https://...">
+                                    <label>Thumbnail Image URL:</label>
+                                    <input type="url" id="vid-thumb" placeholder="https://site.com/image.png">
                                 </div>
                                 <button type="submit" class="retro-btn">Upload Video</button>
                             </form>
@@ -68,26 +79,22 @@
                     <div class="section-box yellow-box" id="fufu-admin-box" style="display:none;">
                         <div class="box-title">Fufu's Management Panel 👑</div>
                         <div class="box-body">
-                            <p style="margin-bottom:8px;">Give a Verified Badge:</p>
-                            <select id="admin-user-select">
-                                <option value="">Select a member...</option>
-                            </select>
-                            <button id="admin-verify-btn" class="retro-btn" style="margin-top:5px;">Toggle Verified Status</button>
+                            <p style="margin-bottom:8px;">Grant Verified Status to a Member:</p>
+                            <select id="admin-user-select"><option value="">Select a member...</option></select>
+                            <button id="admin-verify-btn" class="retro-btn" style="margin-top:8px;">Toggle Badge Status</button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div id="video-player-zone" class="section-box" style="display:none; margin-top:20px;">
-                <div class="box-title" id="player-video-title">Viewing Video</div>
+            <div id="video-player-zone" class="section-box" style="display:none; margin-top:15px;">
+                <div class="box-title" id="player-video-title">Viewing Video Player</div>
                 <div class="box-body">
                     <div class="video-wrapper">
-                        <video id="main-video-element" controls src=""></video>
+                        <video id="main-video-element" controls></video>
                     </div>
                     <div class="video-meta-line">
-                        <div class="creator-clickable" id="player-creator-info">
-                            Uploaded by: <span id="player-creator-name" class="link-blue"></span>
-                        </div>
+                        <div id="player-creator-info">Uploaded by: <span id="player-creator-name" class="link-blue"></span></div>
                         <div class="like-system">
                             <button id="like-btn" class="retro-btn">👍 Like</button>
                             <span id="like-count">0</span> likes
@@ -95,10 +102,10 @@
                         </div>
                     </div>
                     <div class="comments-section">
-                        <h3>Comments:</h3>
+                        <h3 style="border-bottom: 1px solid #CCC; padding-bottom:4px; margin-bottom:8px;">Comments:</h3>
                         <div id="comments-list"></div>
                         <div id="add-comment-zone" style="display:none; margin-top:10px;">
-                            <input type="text" id="new-comment-text" placeholder="Add a public comment...">
+                            <input type="text" id="new-comment-text" placeholder="Add a public comment..." style="width:75%; padding:3px;">
                             <button id="submit-comment-btn" class="retro-btn">Post</button>
                         </div>
                     </div>
@@ -115,16 +122,25 @@
             </div>
         </div>
 
-        <div id="profile-detail-zone" class="section-box blue-box" style="display: none;">
-            <div class="box-title-blue"><span id="detail-title-text">Member Profile Inspection</span></div>
+        <div id="page-community" class="page-content">
+            <div class="section-box">
+                <div class="box-title">Community Space</div>
+                <div class="box-body">
+                    <p>Welcome to the community board. Text posts, active discussions and events schedules will soon be displayed here.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="profile-detail-zone" class="section-box blue-box" style="display: none; margin-top: 20px;">
+            <div class="box-title-blue">Member Profile Inspection</div>
             <div class="box-body-blue" id="modal-body"></div>
         </div>
 
     </div>
 
     <footer id="retro-footer">
-        <div><a href="#">About Us</a> | <a href="#">Terms</a> | <a href="#">Help</a></div>
-        <div class="copyright">Copyright © 2006 USMS CORD, LLC</div>
+        <div><a href="#">About Us</a> | <a href="#">Terms of Service</a> | <a href="#">Help Center</a></div>
+        <div class="copyright" style="margin-top:5px; color:#666;">Copyright © 2006 USMS CORD, LLC</div>
     </footer>
 
     <script src="script.js"></script>
