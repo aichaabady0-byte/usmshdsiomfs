@@ -1,25 +1,25 @@
 const { createClient } = require('@vercel/kv');
 
-// Initialisation sécurisée de Vercel KV
+// Initialisation de Vercel KV
 const kv = (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) 
   ? createClient({ url: process.env.KV_REST_API_URL, token: process.env.KV_REST_API_TOKEN }) 
   : null;
 
-// Nettoyage de l'URL pour éviter le bug du double slash ou slash manquant
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ? process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, '') : '';
+// Récupération stricte et nettoyage des variables d'environnement (Supprime les espaces/crochets invisibles)
+const CLIENT_ID = process.env.DISCORD_CLIENT_ID ? process.env.DISCORD_CLIENT_ID.trim() : "";
+const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET ? process.env.DISCORD_CLIENT_SECRET.trim() : "";
+const GUILD_ID = process.env.DISCORD_GUILD_ID ? process.env.DISCORD_GUILD_ID.trim() : "";
+const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN ? process.env.DISCORD_BOT_TOKEN.trim() : "";
 
-const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
-const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
-const REDIRECT_URI = `${BASE_URL}/api/auth?action=callback`;
-const GUILD_ID = process.env.DISCORD_GUILD_ID;
-const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
+// On force l'URL de redirection de manière propre et textuelle sans passer par NEXT_PUBLIC_SITE_URL si celle-ci pose problème
+const REDIRECT_URI = "https://usmscord.blabchat.space/api/auth?action=callback";
 
 module.exports = async (req, res) => {
     const { action, code } = req.query;
 
     // 1. DIRECTION LE LOGIN DISCORD
     if (action === 'login') {
-        const discordAuthUrl = `https://discord.com/oauth2/authorize?client_id=1507809245163294811&response_type=code&redirect_uri=https%3A%2F%2Fusmscord.blabchat.space%2Fapi%2Fauth%3Faction%3Dcallback&scope=identify`;
+        const discordAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify`;
         return res.redirect(discordAuthUrl);
     }
 
@@ -30,7 +30,7 @@ module.exports = async (req, res) => {
         }
 
         try {
-            // On échange le code contre l'Access Token
+            // Échange du code contre l'Access Token
             const tokenResponse = await fetch('https://discord.com/api/oauth2/token', {
                 method: 'POST',
                 body: new URLSearchParams({
@@ -45,7 +45,7 @@ module.exports = async (req, res) => {
 
             const tokenData = await tokenResponse.json();
             
-            // Si l'access token n'est pas là, on crache le morceau pour voir ce qui ne va pas
+            // Si l'access token n'est pas généré, on affiche les détails pour comprendre le blocage
             if (!tokenData.access_token) {
                 return res.status(400).send(`
                     <h1>Erreur d'authentification</h1>
@@ -68,12 +68,12 @@ module.exports = async (req, res) => {
             });
 
             if (!guildMemberResponse.ok) {
-                return res.status(403).send("<h1>Accès Refusé</h1><p>Tu dois faire partie du serveur Discord officiel pour te connecter ici.</p><a href='/'>Retour à l'accueil</a>");
+                return res.status(403).send("<h1>Accès Refusé</h1><p>Tu devez faire partie du serveur Discord officiel pour te connecter ici.</p><a href='/'>Retour à l'accueil</a>");
             }
 
             const memberData = await guildMemberResponse.json();
 
-            // On récupère la liste des rôles pour choper les couleurs
+            // Récupération de la liste des rôles pour appliquer les couleurs
             const rolesResponse = await fetch(`https://discord.com/api/v10/guilds/${GUILD_ID}/roles`, {
                 headers: { Authorization: `Bot ${BOT_TOKEN}` },
             });
@@ -83,7 +83,7 @@ module.exports = async (req, res) => {
                 return found ? { name: found.name, color: '#' + found.color.toString(16).padStart(6, '0') } : null;
             }).filter(Boolean);
 
-            // Préparation de la session
+            // Préparation de l'objet de session
             const sessionUser = {
                 id: userData.id,
                 username: userData.username,
