@@ -16,7 +16,7 @@ module.exports = async (req, res) => {
     // 1. ACTION DE LOGIN : Redirige l'utilisateur vers la page de connexion officielle Discord
     if (action === 'login') {
         // Remplacer cette URL par ton lien Generated URL obtenu sur l'interface Discord Dev
-        const discordAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify`;
+        const discordAuthUrl = `https://discord.com/oauth2/authorize?client_id=1507809245163294811&response_type=code&redirect_uri=https%3A%2F%2Fusmscord.blabchat.space%2Fapi%2Fauth%3Faction%3Dcallback&scope=identify`;
         return res.redirect(discordAuthUrl);
     }
 
