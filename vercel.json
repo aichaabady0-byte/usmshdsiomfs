@@ -12,6 +12,7 @@
     { "src": "/api/auth", "dest": "api-auth.js" },
     { "src": "/api/videos", "dest": "api-videos.js" },
     { "src": "/logo.png", "dest": "/logo.png" },
+    { "src": "/favicon.ico", "dest": "/logo.png" },
     { "src": "/style.css", "dest": "/style.css" },
     { "src": "/script.js", "dest": "/script.js" },
     { "src": "/(.*)", "dest": "/index.html" }
