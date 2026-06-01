@@ -37,12 +37,22 @@ document.addEventListener('DOMContentLoaded', () => {
     if (userCookie) {
         try {
             currentUser = JSON.parse(userCookie);
-            userStatusText.innerText = `Welcome, ${currentUser.nickname}`;
-            authBtn.innerText = "Log Out";
+            
+            // Est-ce que l'utilisateur est Fufu ou possède un rôle Admin/Vérifié ?
+            const isFufu = currentUser.username.toLowerCase() === 'fufuofficial_';
+            const hasVerifiedBadge = isFufu || currentUser.roles.some(r => r.name.toLowerCase().includes('verified') || r.name.toLowerCase().includes('admin'));
+
+            // MET À JOUR L'INTERFACE AVEC DES ICÔNES VECTORIELLES
+            let checkmarkHtml = hasVerifiedBadge ? ' <i class="fas fa-circle-check" style="color: #1DA1F2; margin-left: 5px;" title="Verified Member"></i>' : '';
+            userStatusText.innerHTML = `<i class="fas fa-user" style="margin-right: 6px;"></i>${currentUser.nickname}${checkmarkHtml}`;
+            
+            // Change le bouton de connexion en bouton de déconnexion avec icône
+            authBtn.innerHTML = '<i class="fas fa-sign-out-alt" style="margin-right: 5px;"></i>Log Out';
+            
             if (publishBox) publishBox.style.display = "block";
 
-            // Affichage instantané du Panel Admin si c'est fufuofficial_
-            if (currentUser.username.toLowerCase() === 'fufuofficial_' && fufuAdminBox) {
+            // ACTIVER LES FONCTIONS ADMIN EXCLUSIVES SI C'EST FUFU
+            if (isFufu && fufuAdminBox) {
                 fufuAdminBox.style.display = "block";
             }
 
@@ -60,10 +70,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 stayConnectedChoice = localStorage.getItem('usms_stay_connected');
             }
 
-            // Si l'utilisateur clique sur "Non", on liquide sa session uniquement s'il quitte vraiment l'application
+            // Si choix = Non, on supprime la session à la fermeture réelle de l'application
             if (stayConnectedChoice === 'no') {
                 window.addEventListener('pagehide', (event) => {
-                    // On vérifie que ce n'est pas un simple rafraîchissement ou une redirection interne
                     if (!event.persisted) {
                         document.cookie = "usms_user=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT";
                         localStorage.removeItem('usms_stay_connected');
@@ -74,11 +83,15 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) {
             console.error("Erreur d'analyse de la session utilisateur :", e);
         }
+    } else {
+        // Mode déconnecté par défaut avec icônes vectorielles
+        userStatusText.innerHTML = '<i class="fas fa-user-slash" style="margin-right: 6px;"></i>Not connected';
+        authBtn.innerHTML = '<i class="fab fa-discord" style="margin-right: 5px;"></i>Connect with Discord';
     }
 
     // 3. ACTION DU BOUTON DE CONNEXION / DECONNEXION
     authBtn.addEventListener('click', () => {
-        localStorage.removeItem('usms_stay_connected'); // Nettoyage du choix local
+        localStorage.removeItem('usms_stay_connected'); 
         if (!currentUser) {
             window.location.href = '/api/auth?action=login';
         } else {
@@ -89,14 +102,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // 4. CHARGEMENT ET RENDU DE LA LISTE DES MEMBRES DISCORD
     async function loadMembers() {
         if (!membersGrid) return;
-        membersGrid.innerHTML = "<p style='padding:15px;'>Loading online members database...</p>";
+        membersGrid.innerHTML = "<p style='padding:15px;'><i class='fas fa-spinner fa-spin'></i> Loading online members database...</p>";
         
         try {
             const res = await fetch('/api/members');
             const data = await res.json();
 
             if (!data || data.error) {
-                membersGrid.innerHTML = `<p style='padding:15px; color:red;'>Error loading data: ${data.message || 'Unknown issue'}</p>`;
+                membersGrid.innerHTML = `<p style='padding:15px; color:red;'><i class='fas fa-exclamation-triangle'></i> Error loading data: ${data.message || 'Unknown issue'}</p>`;
                 return;
             }
 
@@ -105,16 +118,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 const card = document.createElement('div');
                 card.className = "member-card";
                 
-                // Extraction du rôle principal ou affichage par défaut
+                // Extraction et badge de rôles
                 let roleHtml = "<span class='role-badge' style='background:#777; color:#FFF;'>Member</span>";
                 if (member.roles && member.roles.length > 0) {
-                    roleHtml = member.roles.map(r => `<span class="role-badge" style="background:${r.color || '#555'}; color:#FFF;">${r.name}</span>`).join(' ');
+                    roleHtml = member.roles.map(r => {
+                        // Si le rôle contient une couronne dans son texte, on ajoute l'icône vectorielle
+                        let icon = r.name.includes('👑') ? '<i class="fas fa-crown" style="margin-right:4px;"></i>' : '';
+                        let cleanName = r.name.replace('👑', '').trim();
+                        return `<span class="role-badge" style="background:${r.color || '#555'}; color:#FFF;">${icon}${cleanName}</span>`;
+                    }).join(' ');
                 }
+
+                // Checkmark à côté du nom des membres de la liste s'ils sont vérifiés/admins
+                const isMemberAdmin = member.username.toLowerCase() === 'fufuofficial_' || member.roles.some(r => r.name.toLowerCase().includes('admin') || r.name.toLowerCase().includes('verified'));
+                const listCheckmark = isMemberAdmin ? ' <i class="fas fa-circle-check" style="color: #1DA1F2; font-size:12px; margin-left:4px;"></i>' : '';
 
                 card.innerHTML = `
                     <img src="${member.avatar}" alt="Avatar" class="member-avatar">
                     <div class="member-info">
-                        <div class="member-name">${member.nickname}</div>
+                        <div class="member-name">${member.nickname}${listCheckmark}</div>
                         <div class="member-username">@${member.username}</div>
                         <div class="member-roles" style="margin-top:5px;">${roleHtml}</div>
                     </div>
@@ -122,7 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 membersGrid.appendChild(card);
             });
         } catch (err) {
-            membersGrid.innerHTML = `<p style='padding:15px; color:red;'>Failed to contact backend API: ${err.message}</p>`;
+            membersGrid.innerHTML = `<p style='padding:15px; color:red;'><i class='fas fa-exclamation-triangle'></i> Failed to contact backend API: ${err.message}</p>`;
         }
     }
 });
