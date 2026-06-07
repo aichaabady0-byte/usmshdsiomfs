@@ -1,148 +1,71 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>USMS CORD</title>
-    <link rel="icon" type="image/png" href="logo.png">
-    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div id="util-bar">
-        <div class="util-left"><span id="tagline">Broadcast Yourself™</span></div>
-        <div class="util-right">
-            <span id="user-status-text">Not connected</span>
-            <button id="discord-auth-btn" class="retro-btn">Connect with Discord</button>
+    <header class="navbar">
+        <div class="nav-left">
+            <span class="logo-text">USMS CORD</span>
+            <span id="user-status-text"><i class="fas fa-user-slash" style="margin-right: 6px;"></i>Not connected</span>
         </div>
-    </div>
-
-    <header id="main-header">
-        <img src="logo.png" alt="USMS CORD Logo" id="site-logo">
-        <div class="search-container">
-            <input type="text" id="search-input" placeholder="Search...">
+        <div class="nav-right">
+            <button id="discord-auth-btn" class="btn-discord">
+                <i class="fab fa-discord" style="margin-right: 5px;"></i>Connect with Discord
+            </button>
         </div>
     </header>
 
-    <nav id="nav-tabs">
-        <div class="tab active" data-target="page-home">Home</div>
-        <div class="tab" data-target="page-videos">Videos</div>
-        <div class="tab" data-target="page-members">Channels & Members</div>
-        <div class="tab" data-target="page-community">Community</div>
+    <nav class="tabs-container">
+        <button class="tab active" data-target="page-home">Accueil</button>
+        <button class="tab" data-target="page-members">Membres</button>
+        <button class="tab" data-target="page-videos">Vidéos</button>
     </nav>
 
-    <div id="main-container">
-        
-        <div id="page-home" class="page-content active-page">
-            <div class="section-box">
-                <div class="box-title">Welcome Home</div>
-                <div class="box-body">
-                    <p style="font-size:14px; font-weight:bold; margin-bottom:10px;">Welcome to USMS CORD !</p>
-                    <p>Navigate through the tabs above to explore active members, check custom videos uploaded by the community, or join discussion hubs.</p>
-                </div>
-            </div>
-        </div>
+    <main class="main-content">
 
-        <div id="page-videos" class="page-content">
-            <div class="two-column-layout">
-                <div class="left-column">
-                    <div class="section-box">
-                        <div class="box-title">Featured Videos Feed</div>
-                        <div class="box-body">
-                            <div id="videos-grid"></div>
-                        </div>
-                    </div>
-                </div>
+        <section id="page-home" class="page-content active-page">
+            <h2>Bienvenue sur USMS CORD</h2>
+            <p>Connecte-toi avec ton compte Discord pour interagir avec la communauté.</p>
 
-                <div class="right-column">
-                    <div class="section-box" id="publish-box" style="display:none;">
-                        <div class="box-title">Publish a Video</div>
-                        <div class="box-body">
-                            <form id="publish-form">
-                                <div class="form-group">
-                                    <label>Video Title:</label>
-                                    <input type="text" id="vid-title" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>Video URL (.mp4 direct link):</label>
-                                    <input type="url" id="vid-url" required placeholder="https://site.com/video.mp4">
-                                </div>
-                                <div class="form-group">
-                                    <label>Thumbnail Image URL:</label>
-                                    <input type="url" id="vid-thumb" placeholder="https://site.com/image.png">
-                                </div>
-                                <button type="submit" class="retro-btn">Upload Video</button>
-                            </form>
-                        </div>
-                    </div>
-
-                    <div class="section-box yellow-box" id="fufu-admin-box" style="display:none;">
-                        <div class="box-title">Fufu's Management Panel 👑</div>
-                        <div class="box-body">
-                            <p style="margin-bottom:8px;">Grant Verified Status to a Member:</p>
-                            <select id="admin-user-select"><option value="">Select a member...</option></select>
-                            <button id="admin-verify-btn" class="retro-btn" style="margin-top:8px;">Toggle Badge Status</button>
-                        </div>
-                    </div>
-                </div>
+            <div id="publish-box" style="display: none;" class="card">
+                <h3>Créer une publication</h3>
+                <textarea placeholder="Partage quelque chose avec la communauté..."></textarea>
+                <button class="btn-primary">Publier</button>
             </div>
 
-            <div id="video-player-zone" class="section-box" style="display:none; margin-top:15px;">
-                <div class="box-title" id="player-video-title">Viewing Video Player</div>
-                <div class="box-body">
-                    <div class="video-wrapper">
-                        <video id="main-video-element" controls></video>
-                    </div>
-                    <div class="video-meta-line">
-                        <div id="player-creator-info">Uploaded by: <span id="player-creator-name" class="link-blue"></span></div>
-                        <div class="like-system">
-                            <button id="like-btn" class="retro-btn">👍 Like</button>
-                            <span id="like-count">0</span> likes
-                            <button id="dislike-btn" class="retro-btn" style="margin-left:5px;">👎 Dislike</button>
-                        </div>
-                    </div>
-                    <div class="comments-section">
-                        <h3 style="border-bottom: 1px solid #CCC; padding-bottom:4px; margin-bottom:8px;">Comments:</h3>
-                        <div id="comments-list"></div>
-                        <div id="add-comment-zone" style="display:none; margin-top:10px;">
-                            <input type="text" id="new-comment-text" placeholder="Add a public comment..." style="width:75%; padding:3px;">
-                            <button id="submit-comment-btn" class="retro-btn">Post</button>
-                        </div>
-                    </div>
+            <div id="fufu-admin-box" style="display: none;" class="card admin-card">
+                <h3><i class="fas fa-crown" style="color: #FFD700;"></i> Panel Super Admin (Fufu)</h3>
+                <p>Gère les certifications des membres enregistrés dans la base Vercel KV :</p>
+                
+                <div class="admin-controls" style="margin-top: 15px; display: flex; gap: 10px;">
+                    <select id="admin-user-select" style="padding: 8px; border-radius: 5px; flex: 1;">
+                        <option value="">Chargement des membres...</option>
+                    </select>
+                    <button id="admin-verify-btn" class="btn-verify" style="padding: 8px 15px; background: #1DA1F2; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                        <i class="fas fa-check-double"></i> Alterner Certification
+                    </button>
                 </div>
             </div>
-        </div>
+        </section>
 
-        <div id="page-members" class="page-content">
-            <div class="section-box">
-                <div class="box-title">Channels / Server Members</div>
-                <div class="box-body">
-                    <div id="members-grid"></div>
+        <section id="page-members" class="page-content">
+            <h2>Membres du Serveur</h2>
+            <div id="members-grid" class="grid-container">
                 </div>
-            </div>
-        </div>
+        </section>
 
-        <div id="page-community" class="page-content">
-            <div class="section-box">
-                <div class="box-title">Community Space</div>
-                <div class="box-body">
-                    <p>Welcome to the community board. Text posts, active discussions and events schedules will soon be displayed here.</p>
-                </div>
-            </div>
-        </div>
+        <section id="page-videos" class="page-content">
+            <h2>Vidéos de la Communauté</h2>
+            <p>Les vidéos partagées par les membres certifiés s'afficheront ici.</p>
+        </section>
 
-        <div id="profile-detail-zone" class="section-box blue-box" style="display: none; margin-top: 20px;">
-            <div class="box-title-blue">Member Profile Inspection</div>
-            <div class="box-body-blue" id="modal-body"></div>
-        </div>
-
-    </div>
-
-    <footer id="retro-footer">
-        <div><a href="#">About Us</a> | <a href="#">Terms of Service</a> | <a href="#">Help Center</a></div>
-        <div class="copyright" style="margin-top:5px; color:#666;">Copyright © 2006 USMS CORD, LLC</div>
-    </footer>
+    </main>
 
     <script src="script.js"></script>
 </body>
