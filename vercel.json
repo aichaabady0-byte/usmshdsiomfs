@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "cleanUrls": true,
   "builds": [
     { "src": "api-*.js", "use": "@vercel/node" },
     { "src": "index.html", "use": "@vercel/static" },
@@ -7,14 +8,11 @@
     { "src": "script.js", "use": "@vercel/static" },
     { "src": "logo.png", "use": "@vercel/static" }
   ],
-  "routes": [
-    { "src": "/api/members", "dest": "api-members.js" },
-    { "src": "/api/auth", "dest": "api-auth.js" },
-    { "src": "/api/videos", "dest": "api-videos.js" },
-    { "src": "/logo.png", "dest": "/logo.png" },
-    { "src": "/favicon.ico", "dest": "/logo.png" },
-    { "src": "/style.css", "dest": "/style.css" },
-    { "src": "/script.js", "dest": "/script.js" },
-    { "src": "/(.*)", "dest": "/index.html" }
+  "rewrites": [
+    { "source": "/api/members", "destination": "/api-members.js" },
+    { "source": "/api/auth", "destination": "/api-auth.js" },
+    { "source": "/api/videos", "destination": "/api-videos.js" },
+    { "source": "/favicon.ico", "destination": "/logo.png" },
+    { "source": "/((?!api-.*|style\\.css|script\\.js|logo\\.png).*).*", "destination": "/index.html" }
   ]
 }
