@@ -1,11 +1,9 @@
 const { createClient } = require('@vercel/kv');
 
-// Initialisation de Vercel KV
 const kv = (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) 
   ? createClient({ url: process.env.KV_REST_API_URL, token: process.env.KV_REST_API_TOKEN }) 
   : null;
 
-// Extraction et nettoyage des variables d'environnement Vercel
 const CLIENT_ID = process.env.DISCORD_CLIENT_ID ? process.env.DISCORD_CLIENT_ID.trim() : "";
 const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET ? process.env.DISCORD_CLIENT_SECRET.trim() : "";
 const GUILD_ID = process.env.DISCORD_GUILD_ID ? process.env.DISCORD_GUILD_ID.trim() : "";
@@ -16,20 +14,15 @@ const REDIRECT_URI = "https://usmscord.blabchat.space/api/auth?action=callback";
 module.exports = async (req, res) => {
     const { action, code } = req.query;
 
-    // 1. REDIRECTION VERS L'INTERFACE DISCORD
     if (action === 'login') {
-        const discordAuthUrl = `https://discord.com/oauth2/authorize?client_id=1507809245163294811&response_type=code&redirect_uri=https%3A%2F%2Fusmscord.blabchat.space%2Fapi%2Fauth%3Faction%3Dcallback&scope=identify`;
+        const discordAuthUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify`;
         return res.redirect(discordAuthUrl);
     }
 
-    // 2. RETOUR DE REDIRECTION (CALLBACK)
     if (action === 'callback') {
-        if (!code) {
-            return res.status(400).send("<h1>Erreur</h1><p>Aucun code d'authentification n'a été renvoyé par Discord.</p><a href='/'>Retour</a>");
-        }
+        if (!code) return res.status(400).send("<h1>Erreur</h1><p>Code manquant.</p>");
 
         try {
-            // Échange du code temporaire contre le jeton d'accès utilisateur (Access Token)
             const tokenResponse = await fetch('https://discord.com/api/oauth2/token', {
                 method: 'POST',
                 body: new URLSearchParams({
@@ -43,35 +36,23 @@ module.exports = async (req, res) => {
             });
 
             const tokenData = await tokenResponse.json();
-            
-            if (!tokenData.access_token) {
-                return res.status(400).send(`
-                    <h1>Erreur d'authentification</h1>
-                    <p>Discord a refusé de délivrer l'Access Token.</p>
-                    <p><strong>Réponse brute de Discord :</strong> <code>${JSON.stringify(tokenData)}</code></p>
-                    <p><strong>URL de redirection envoyée :</strong> <code>${REDIRECT_URI}</code></p>
-                    <a href="/">Retourner à l'accueil</a>
-                `);
-            }
+            if (!tokenData.access_token) return res.status(400).send("<h1>Erreur Token Discord</h1>");
 
-            // Récupération du profil Discord de l'utilisateur connecté (@me)
             const userResponse = await fetch('https://discord.com/api/users/@me', {
                 headers: { Authorization: `Bearer ${tokenData.access_token}` },
             });
             const userData = await userResponse.json();
 
-            // Interrogation de l'API Discord avec le Bot pour valider si le membre est sur le serveur
             const guildMemberResponse = await fetch(`https://discord.com/api/v10/guilds/${GUILD_ID}/members/${userData.id}`, {
                 headers: { Authorization: `Bot ${BOT_TOKEN}` },
             });
 
             if (!guildMemberResponse.ok) {
-                return res.status(403).send("<h1>Accès Refusé</h1><p>Tu dois obligatoirement faire partie du serveur Discord officiel pour te connecter ici.</p><a href='/'>Retour à l'accueil</a>");
+                return res.status(403).send("<h1>Accès Refusé</h1><p>Tu dois faire partie du serveur Discord.</p>");
             }
 
             const memberData = await guildMemberResponse.json();
 
-            // Chargement de l'index des rôles du serveur pour associer les couleurs et noms aux IDs du membre
             const rolesResponse = await fetch(`https://discord.com/api/v10/guilds/${GUILD_ID}/roles`, {
                 headers: { Authorization: `Bot ${BOT_TOKEN}` },
             });
@@ -81,7 +62,7 @@ module.exports = async (req, res) => {
                 return found ? { name: found.name, color: '#' + found.color.toString(16).padStart(6, '0') } : null;
             }).filter(Boolean);
 
-            // Construction de la session utilisateur
+            // Session propre
             const sessionUser = {
                 id: userData.id,
                 username: userData.username,
@@ -91,27 +72,16 @@ module.exports = async (req, res) => {
                 roles: userRoles
             };
 
-            // INJECTION DU BADGE ADMIN AVEC LA COURONNE RECONNUE PAR LE SCRIPT JS
-            if (userData.username.toLowerCase() === 'fufuofficial_') {
-                if (!sessionUser.roles) sessionUser.roles = [];
-                // On ajoute la couronne directement dans le nom pour l'analyse regex du front-end
-                sessionUser.roles.unshift({ name: "Admin 👑", color: "#FF0000" });
-            }
-
-            // Génération du cookie de session sécurisé (actif pendant 24 heures)
             res.setHeader('Set-Cookie', `usms_user=${encodeURIComponent(JSON.stringify(sessionUser))}; Path=/; Max-Age=86400; SameSite=Lax`);
             return res.redirect('/');
 
         } catch (error) {
-            return res.status(500).send(`<h1>Erreur Interne du Serveur</h1><p>${error.message}</p>`);
+            return res.status(500).send(`<h1>Erreur Interne</h1><p>${error.message}</p>`);
         }
     }
 
-    // 3. LOGOUT DE SESSION
     if (action === 'logout') {
         res.setHeader('Set-Cookie', 'usms_user=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT');
         return res.redirect('/');
     }
-
-    return res.status(400).json({ error: "Action non reconnue." });
 };
