@@ -1,9 +1,3 @@
-const { createClient } = require('@vercel/kv');
-
-const kv = (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) 
-  ? createClient({ url: process.env.KV_REST_API_URL, token: process.env.KV_REST_API_TOKEN }) 
-  : null;
-
 const CLIENT_ID = process.env.DISCORD_CLIENT_ID ? process.env.DISCORD_CLIENT_ID.trim() : "";
 const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET ? process.env.DISCORD_CLIENT_SECRET.trim() : "";
 const GUILD_ID = process.env.DISCORD_GUILD_ID ? process.env.DISCORD_GUILD_ID.trim() : "";
@@ -15,12 +9,12 @@ module.exports = async (req, res) => {
     const { action, code } = req.query;
 
     if (action === 'login') {
-        const discordAuthUrl = `https://discord.com/oauth2/authorize?client_id=1507809245163294811&response_type=code&redirect_uri=https%3A%2F%2Fusmscord.blabchat.space%2Fapi%2Fauth%3Faction%3Dcallback&scope=identify`;
+        const discordAuthUrl = `https://discord.com/oauth2/authorize?client_id=1507809245163294811&response_type=code&redirect_uri=https%3A%2F%2Fusmscord.blabchat.space%2Fapi%2Fauth%3Faction%3Dcallback&scope=identifyy`;
         return res.redirect(discordAuthUrl);
     }
 
     if (action === 'callback') {
-        if (!code) return res.status(400).send("<h1>Erreur</h1><p>Code manquant.</p>");
+        if (!code) return res.status(400).send("<h1>Erreur d'authentification</h1><p>Code Discord introuvable.</p>");
 
         try {
             const tokenResponse = await fetch('https://discord.com/api/oauth2/token', {
@@ -36,7 +30,7 @@ module.exports = async (req, res) => {
             });
 
             const tokenData = await tokenResponse.json();
-            if (!tokenData.access_token) return res.status(400).send("<h1>Erreur Token Discord</h1>");
+            if (!tokenData.access_token) return res.status(400).send("<h1>Erreur d'autorisation</h1><p>Discord a refusé l'échange de jetons.</p>");
 
             const userResponse = await fetch('https://discord.com/api/users/@me', {
                 headers: { Authorization: `Bearer ${tokenData.access_token}` },
@@ -48,7 +42,7 @@ module.exports = async (req, res) => {
             });
 
             if (!guildMemberResponse.ok) {
-                return res.status(403).send("<h1>Accès Refusé</h1><p>Tu dois faire partie du serveur Discord.</p>");
+                return res.status(403).send("<h1>Accès refusé</h1><p>Tu dois être présent sur le serveur Discord officiel pour te connecter.</p>");
             }
 
             const memberData = await guildMemberResponse.json();
@@ -62,7 +56,6 @@ module.exports = async (req, res) => {
                 return found ? { name: found.name, color: '#' + found.color.toString(16).padStart(6, '0') } : null;
             }).filter(Boolean);
 
-            // Session propre
             const sessionUser = {
                 id: userData.id,
                 username: userData.username,
@@ -76,7 +69,7 @@ module.exports = async (req, res) => {
             return res.redirect('/');
 
         } catch (error) {
-            return res.status(500).send(`<h1>Erreur Interne</h1><p>${error.message}</p>`);
+            return res.status(500).send(`<h1>Erreur Critique</h1><p>${error.message}</p>`);
         }
     }
 
