@@ -1,72 +1,23 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>USMS CORD</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="description" content="Express Yourself">
+  <meta name="keywords" content="bitview,video,sharing,altvid,youtube,clone,maintenance,service,upgrades,updates">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BitView - Express Yourself</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <main>
+    <div id="logo"><img src="logo.png" alt="USMSCord"></div>
+    <div class="bubble">
+      <h1>Under Maintenance</h1>
+      <h2>We are undergoing unscheduled maintenance<br>and will return as soon as possible!</h2>
+    </div>
+  </main>
+  <footer>
+    <small>© USMSCord</small>
+  </footer>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a08103560df41717',t:'MTc4MDg0OTUyOQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><iframe height="1" width="1" style="position: absolute; top: 0px; left: 0px; border-width: medium; border-style: none; border-color: currentcolor; border-image: initial; visibility: hidden;"></iframe>
 
-    <header class="navbar">
-        <div class="nav-left">
-            <span class="logo-text">USMS CORD</span>
-            <span id="user-status-text"><i class="fas fa-user-slash" style="margin-right: 6px;"></i>Not connected</span>
-        </div>
-        <div class="nav-right">
-            <button id="discord-auth-btn" class="btn-discord">
-                <i class="fab fa-discord" style="margin-right: 5px;"></i>Connect with Discord
-            </button>
-        </div>
-    </header>
 
-    <nav class="tabs-container">
-        <button class="tab active" data-target="page-home">Accueil</button>
-        <button class="tab" data-target="page-members">Membres</button>
-        <button class="tab" data-target="page-videos">Vidéos</button>
-    </nav>
-
-    <main class="main-content">
-
-        <section id="page-home" class="page-content active-page">
-            <h2>Bienvenue sur USMS CORD</h2>
-            <p>Connecte-toi avec ton compte Discord pour interagir avec la communauté.</p>
-
-            <div id="publish-box" style="display: none;" class="card">
-                <h3>Créer une publication</h3>
-                <textarea placeholder="Partage quelque chose avec la communauté..."></textarea>
-                <button class="btn-primary">Publier</button>
-            </div>
-
-            <div id="fufu-admin-box" style="display: none;" class="card admin-card">
-                <h3><i class="fas fa-crown" style="color: #FFD700;"></i> Panel Super Admin (Fufu)</h3>
-                <p>Gère les certifications des membres enregistrés dans la base Vercel KV :</p>
-                
-                <div class="admin-controls" style="margin-top: 15px; display: flex; gap: 10px;">
-                    <select id="admin-user-select" style="padding: 8px; border-radius: 5px; flex: 1;">
-                        <option value="">Chargement des membres...</option>
-                    </select>
-                    <button id="admin-verify-btn" class="btn-verify" style="padding: 8px 15px; background: #1DA1F2; color: white; border: none; border-radius: 5px; cursor: pointer;">
-                        <i class="fas fa-check-double"></i> Alterner Certification
-                    </button>
-                </div>
-            </div>
-        </section>
-
-        <section id="page-members" class="page-content">
-            <h2>Membres du Serveur</h2>
-            <div id="members-grid" class="grid-container">
-                </div>
-        </section>
-
-        <section id="page-videos" class="page-content">
-            <h2>Vidéos de la Communauté</h2>
-            <p>Les vidéos partagées par les membres certifiés s'afficheront ici.</p>
-        </section>
-
-    </main>
-
-    <script src="script.js"></script>
-</body>
-</html>
+</body></html>
