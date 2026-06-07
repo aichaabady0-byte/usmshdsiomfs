@@ -1,18 +1,8 @@
 {
-  "version": 2,
-  "cleanUrls": true,
-  "builds": [
-    { "src": "api-*.js", "use": "@vercel/node" },
-    { "src": "index.html", "use": "@vercel/static" },
-    { "src": "style.css", "use": "@vercel/static" },
-    { "src": "script.js", "use": "@vercel/static" },
-    { "src": "logo.png", "use": "@vercel/static" }
-  ],
   "rewrites": [
-    { "source": "/api/members", "destination": "/api-members.js" },
-    { "source": "/api/auth", "destination": "/api-auth.js" },
-    { "source": "/api/videos", "destination": "/api-videos.js" },
-    { "source": "/favicon.ico", "destination": "/logo.png" },
-    { "source": "/((?!api-.*|style\\.css|script\\.js|logo\\.png).*).*", "destination": "/index.html" }
+    {
+      "source": "/((?!api/|res/|logo\\.png).*|index\\.html)",
+      "destination": "/index.html"
+    }
   ]
 }
